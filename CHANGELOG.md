@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Readonly meshes now can be encoded in the Editor
 - Removed Editor-only `sync` parameter from `DracoMeshLoader.ConvertDracoMeshToUnity` to make API stable (regardless of environment/scripting defines)
 - WebGL native libraries are now installed via sub-packages
+### Removed
+- Obsolete console error about downgrading package for certain Unity versions
 ### Fixed
 - Destroying temporary copy (instead of original) GameObject when encoding selected GameObject from the menu
 

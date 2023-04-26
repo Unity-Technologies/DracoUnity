@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated Burst dependency to version 1.8.4
 - Readonly meshes now can be encoded in the Editor
 - Removed Editor-only `sync` parameter from `DracoMeshLoader.ConvertDracoMeshToUnity` to make API stable (regardless of environment/scripting defines)
+- WebGL native libraries are now installed via sub-packages
 ### Fixed
 - Destroying temporary copy (instead of original) GameObject when encoding selected GameObject from the menu
 

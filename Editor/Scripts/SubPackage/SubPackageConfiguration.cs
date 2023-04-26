@@ -1,0 +1,39 @@
+using UnityEngine;
+
+namespace SubPackage
+{
+    static class SubPackageConfiguration
+    {
+        const string k_PackageName = "Unity Cloud Draco";
+
+        internal static SubPackageConfigSchema config = new SubPackageConfigSchema()
+        {
+            dialogTitle = "Installing Sub Packages",
+            dialogText = $"The {k_PackageName} package requires sub-packages which vary, depending on the Unity version. These dependencies will now be updated automatically and will appear in your project's manifest file.",
+
+            cleanupRegex = @"^com\.unity\.cloud\.draco\.webgl-.*$",
+            
+            subPackages = new[]
+            {
+                new SubPackageEntrySchema()
+                {
+                    name = "com.unity.cloud.draco.webgl-2022",
+                    minimumUnityVersion = "2022.2.0",
+                    version = "0.1.0"
+                },
+                new SubPackageEntrySchema()
+                {
+                    name = "com.unity.cloud.draco.webgl-2021",
+                    minimumUnityVersion = "2021.2.0",
+                    version = "0.1.0"
+                },
+                new SubPackageEntrySchema()
+                {
+                    name = "com.unity.cloud.draco.webgl-2020",
+                    minimumUnityVersion = "2019.2.0",
+                    version = "0.1.0"
+                }
+            }
+        };
+    }
+}

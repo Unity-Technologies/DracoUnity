@@ -1,8 +1,8 @@
 {
   "name": "com.atteneder.draco",
   "version": "5.0.0-pre.1",
-  "displayName": "Draco 3D Data Compression",
-  "description": "Draco is an open-source library for compressing and decompressing 3D geometric meshes and point clouds. It is intended to improve the storage and transmission of 3D graphics. This package allows you to apply Draco compression to meshes, import Draco files and load them at runtime.",
+  "displayName": "Draco for Unity",
+  "description": "Use Draco for Unity to apply Draco compression to meshes, import Draco files and load Draco data at runtime. Draco is an open-source library for compressing and decompressing 3D geometric meshes and point clouds. It is intended to improve the storage and transmission of 3D graphics.",
   "unity": "2021.2",
   "dependencies": {
     "com.unity.burst": "1.8.4"

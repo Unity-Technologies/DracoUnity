@@ -1,0 +1,7 @@
+{
+    "createSeparatePackage": true,
+    "displayName": "Draco for Unity Tests",
+    "dependencies": {
+       "com.unity.modules.unitywebrequest": "1.0.0"
+    }
+}

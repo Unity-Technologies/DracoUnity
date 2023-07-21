@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Much faster encoding due to the use of the C# Job System (threads)
 - Faster encoding due to avoiding a full memory copy of the result
 - All encoding methods are async now
-- Updated Burst dependency to version 1.8.4
+- Updated Burst dependency to version 1.8.7
 - Readonly meshes now can be encoded in the Editor
 - Removed Editor-only `sync` parameter from `DracoMeshLoader.ConvertDracoMeshToUnity` to make API stable (regardless of environment/scripting defines)
 - WebGL native libraries are now installed via sub-packages

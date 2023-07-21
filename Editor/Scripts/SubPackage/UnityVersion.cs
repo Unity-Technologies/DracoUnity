@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2023 Unity Technologies and the Draco for Unity authors
+// SPDX-License-Identifier: Apache-2.0
+
 using System;
 using System.Text.RegularExpressions;
 using UnityEngine;

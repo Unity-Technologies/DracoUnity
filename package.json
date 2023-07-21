@@ -17,10 +17,5 @@
     "google",
     "draco"
   ],
-  "author": {
-    "name": "Andreas Atteneder",
-    "email": "andreas.atteneder@gmail.com",
-    "url": "http://pixel.engineer"
-  },
   "type": "library"
 }

@@ -62,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated Draco native library binaries to [1.1.0](https://github.com/atteneder/draco/releases/tag/unity1.1.0)
 ### Removed
 - 32-bit Linux binaries/support
+- WebGL native libraries
 ### Fixed
 - Unit Tests download URLs updated
 - Editor imports now calculate the correct mesh bounds

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SubPackage
 {
     [System.Serializable]
-    public struct SubPackageEntrySchema
+    struct SubPackageEntrySchema
     {
         public string minimumUnityVersion;
         public string name;

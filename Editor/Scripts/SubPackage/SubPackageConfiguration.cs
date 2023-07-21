@@ -4,7 +4,7 @@ namespace SubPackage
 {
     static class SubPackageConfiguration
     {
-        const string k_PackageName = "Unity Cloud Draco";
+        const string k_PackageName = "Draco for Unity";
 
         internal static SubPackageConfigSchema config = new SubPackageConfigSchema()
         {
@@ -15,6 +15,12 @@ namespace SubPackage
             
             subPackages = new[]
             {
+                new SubPackageEntrySchema()
+                {
+                    name = "com.unity.cloud.draco.webgl-2023",
+                    minimumUnityVersion = "2023.2.0a17",
+                    version = "0.1.0"
+                },
                 new SubPackageEntrySchema()
                 {
                     name = "com.unity.cloud.draco.webgl-2022",

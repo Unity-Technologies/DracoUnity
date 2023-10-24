@@ -12,13 +12,15 @@ using UnityEngine.Rendering;
 
 [assembly: InternalsVisibleTo("DracoEditor")]
 
-namespace Draco {
+namespace Draco
+{
 
     /// <summary>
     /// Provides Draco mesh decoding.
     /// </summary>
-    public class DracoMeshLoader {
-        
+    public class DracoMeshLoader
+    {
+
         /// <summary>
         /// If true, coordinate space is converted from right-hand (like in glTF) to left-hand (Unity).
         /// </summary>
@@ -28,25 +30,27 @@ namespace Draco {
         /// Create a DracoMeshLoader instance which let's you decode Draco data.
         /// </summary>
         /// <param name="convertSpace">If true, coordinate space is converted from right-hand (like in glTF) to left-hand (Unity).</param>
-        public DracoMeshLoader(bool convertSpace = true) {
+        public DracoMeshLoader(bool convertSpace = true)
+        {
             m_ConvertSpace = convertSpace;
         }
 
         /// <summary>
         /// Holds the result of the Draco decoding process.
         /// </summary>
-        public struct DecodeResult {
+        public struct DecodeResult
+        {
             /// <summary>
             /// True if the decoding was successful
             /// </summary>
             public bool success;
-            
+
             /// <summary>
             /// True, if the normals were marked required, but not present in Draco mesh.
             /// They have to get calculated.
             /// </summary>
             public bool calculateNormals;
-            
+
             /// <summary>
             /// If the Draco file contained bone indices and bone weights,
             /// this property is used to carry them over (since MeshData currently
@@ -54,13 +58,14 @@ namespace Draco {
             /// </summary>
             public BoneWeightData boneWeightData;
         }
-        
+
         /// <summary>
         /// Draco encoded meshes might contain bone weights and indices that cannot be applied to the resulting Unity
         /// mesh right away. This class provides them and offers methods to apply them to Unity meshes.
-        /// This 
+        /// This
         /// </summary>
-        public class BoneWeightData : IDisposable {
+        public class BoneWeightData : IDisposable
+        {
             NativeArray<byte> m_BonesPerVertex;
             NativeArray<BoneWeight1> m_BoneWeights;
 
@@ -70,7 +75,8 @@ namespace Draco {
             /// <param name="bonesPerVertex">Bones per vertex </param>
             /// <param name="boneWeights">Bone weights</param>
             /// <seealso cref="Mesh.SetBoneWeights"/>
-            public BoneWeightData(NativeArray<byte> bonesPerVertex, NativeArray<BoneWeight1> boneWeights) {
+            public BoneWeightData(NativeArray<byte> bonesPerVertex, NativeArray<BoneWeight1> boneWeights)
+            {
                 m_BonesPerVertex = bonesPerVertex;
                 m_BoneWeights = boneWeights;
             }
@@ -79,14 +85,16 @@ namespace Draco {
             /// Applies the bone weights and indices on a Unity mesh.
             /// </summary>
             /// <param name="mesh">The mesh to apply the data onto.</param>
-            public void ApplyOnMesh(Mesh mesh) {
-                mesh.SetBoneWeights(m_BonesPerVertex,m_BoneWeights);
+            public void ApplyOnMesh(Mesh mesh)
+            {
+                mesh.SetBoneWeights(m_BonesPerVertex, m_BoneWeights);
             }
 
             /// <summary>
             /// Releases allocated resources.
             /// </summary>
-            public void Dispose() {
+            public void Dispose()
+            {
                 m_BonesPerVertex.Dispose();
                 m_BoneWeights.Dispose();
             }
@@ -96,7 +104,7 @@ namespace Draco {
         /// <see cref="MeshUpdateFlags"/> that are used when decoding meshes from Draco data.
         /// </summary>
         public const MeshUpdateFlags defaultMeshUpdateFlags = MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices | MeshUpdateFlags.DontNotifyMeshUsers | MeshUpdateFlags.DontResetBoneBounds;
-        
+
         /// <summary>
         /// Decodes a Draco mesh
         /// </summary>
@@ -117,7 +125,7 @@ namespace Draco {
             )
         {
             var encodedDataPtr = GetUnsafeReadOnlyIntPtr(encodedData);
-            var meshDataArray = Mesh.AllocateWritableMeshData(1); 
+            var meshDataArray = Mesh.AllocateWritableMeshData(1);
             var mesh = meshDataArray[0];
             var result = await ConvertDracoMeshToUnity(
                 mesh,
@@ -129,13 +137,15 @@ namespace Draco {
                 jointsAttributeId,
                 forceUnityLayout
                 );
-            if (!result.success) {
+            if (!result.success)
+            {
                 meshDataArray.Dispose();
                 return null;
             }
             var unityMesh = new Mesh();
-            Mesh.ApplyAndDisposeWritableMeshData(meshDataArray,unityMesh,defaultMeshUpdateFlags);
-            if (result.boneWeightData != null) {
+            Mesh.ApplyAndDisposeWritableMeshData(meshDataArray, unityMesh, defaultMeshUpdateFlags);
+            if (result.boneWeightData != null)
+            {
                 result.boneWeightData.ApplyOnMesh(unityMesh);
                 result.boneWeightData.Dispose();
             }
@@ -218,7 +228,7 @@ namespace Draco {
             UnsafeUtility.ReleaseGCObject(gcHandle);
             return result;
         }
-        
+
         /// <summary>
         /// Decodes a Draco mesh
         /// </summary>
@@ -252,7 +262,7 @@ namespace Draco {
                 forceUnityLayout
             );
         }
-        
+
 #if UNITY_EDITOR
         internal async Task<DecodeResult> ConvertDracoMeshToUnitySync(
             Mesh.MeshData mesh,
@@ -328,16 +338,19 @@ namespace Draco {
 #endif
             );
             UnsafeUtility.ReleaseGCObject(gcHandle);
-            if (!result.success) {
+            if (!result.success)
+            {
                 meshDataArray.Dispose();
                 return null;
             }
             var unityMesh = new Mesh();
-            Mesh.ApplyAndDisposeWritableMeshData(meshDataArray,unityMesh,defaultMeshUpdateFlags);
-            if (result.calculateNormals) {
+            Mesh.ApplyAndDisposeWritableMeshData(meshDataArray, unityMesh, defaultMeshUpdateFlags);
+            if (result.calculateNormals)
+            {
                 unityMesh.RecalculateNormals();
             }
-            if (requireTangents) {
+            if (requireTangents)
+            {
                 unityMesh.RecalculateTangents();
             }
             return unityMesh;
@@ -358,7 +371,7 @@ namespace Draco {
 #endif
         )
         {
-            var dracoNative = new DracoNative(mesh,m_ConvertSpace);
+            var dracoNative = new DracoNative(mesh, m_ConvertSpace);
             var result = new DecodeResult();
 
 #if UNITY_EDITOR
@@ -370,10 +383,12 @@ namespace Draco {
             {
                 await WaitForJobHandle(dracoNative.Init(encodedData, size));
             }
-            if (dracoNative.ErrorOccured()) {
+            if (dracoNative.ErrorOccured())
+            {
                 return result;
             }
-            if (!requireNormals && requireTangents) {
+            if (!requireNormals && requireTangents)
+            {
                 // Sanity check: We need normals to calculate tangents
                 requireNormals = true;
             }
@@ -396,31 +411,37 @@ namespace Draco {
             }
             var error = dracoNative.ErrorOccured();
             dracoNative.DisposeDracoMesh();
-            if (error) {
+            if (error)
+            {
                 return result;
             }
 
             result.success = dracoNative.PopulateMeshData();
-            if (result.success && dracoNative.hasBoneWeightData) {
+            if (result.success && dracoNative.hasBoneWeightData)
+            {
                 result.boneWeightData = new BoneWeightData(dracoNative.bonesPerVertex, dracoNative.boneWeights);
                 dracoNative.DisposeBoneWeightData();
             }
             return result;
         }
 
-        static async Task WaitForJobHandle(JobHandle jobHandle) {
-            while (!jobHandle.IsCompleted) {
+        static async Task WaitForJobHandle(JobHandle jobHandle)
+        {
+            while (!jobHandle.IsCompleted)
+            {
                 await Task.Yield();
             }
             jobHandle.Complete();
         }
-        
-        static unsafe IntPtr GetUnsafeReadOnlyIntPtr(NativeSlice<byte> encodedData) {
-            return (IntPtr) encodedData.GetUnsafeReadOnlyPtr();
+
+        static unsafe IntPtr GetUnsafeReadOnlyIntPtr(NativeSlice<byte> encodedData)
+        {
+            return (IntPtr)encodedData.GetUnsafeReadOnlyPtr();
         }
-        
-        static unsafe IntPtr PinGCArrayAndGetDataAddress(byte[] encodedData, out ulong gcHandle) {
-            return (IntPtr) UnsafeUtility.PinGCArrayAndGetDataAddress(encodedData, out gcHandle);
+
+        static unsafe IntPtr PinGCArrayAndGetDataAddress(byte[] encodedData, out ulong gcHandle)
+        {
+            return (IntPtr)UnsafeUtility.PinGCArrayAndGetDataAddress(encodedData, out gcHandle);
         }
     }
 }

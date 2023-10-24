@@ -12,11 +12,11 @@ readonly struct UnityVersion : IComparable<UnityVersion>
     public readonly int Patch;
     public readonly char Type;
     public readonly int Sequence;
-    
+
 
     const string k_Pattern = @"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*).*$";
     const string k_FullPattern = @"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)([abf])(0|[1-9]\d*).*$";
-    
+
     static readonly Regex k_Regex = new Regex(k_Pattern);
     static readonly Regex k_FullRegex = new Regex(k_FullPattern);
 

@@ -15,7 +15,7 @@ namespace SubPackage
             dialogText = $"The {k_PackageName} package requires sub-packages which vary, depending on the Unity version. These dependencies will now be updated automatically and will appear in your project's manifest file.",
 
             cleanupRegex = @"^com\.unity\.cloud\.draco\.webgl-.*$",
-            
+
             subPackages = new[]
             {
                 new SubPackageEntrySchema()

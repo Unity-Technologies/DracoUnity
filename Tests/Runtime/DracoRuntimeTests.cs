@@ -1,4 +1,4 @@
-﻿// SPDX-FileCopyrightText: 2023 Unity Technologies and the Draco for Unity authors
+// SPDX-FileCopyrightText: 2023 Unity Technologies and the Draco for Unity authors
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections;
@@ -13,11 +13,12 @@ using UnityEngine.TestTools;
 
 namespace Draco.Tests
 {
-    
-    public class DracoRuntimeTests {
-        
+
+    public class DracoRuntimeTests
+    {
+
         const string k_URLPrefix = "https://raw.githubusercontent.com/google/draco/master/testdata/";
-        
+
         [UnityTest]
         [UseDracoTestFileCase(new[] {
             "bunny_gltf.drc",
@@ -33,7 +34,7 @@ namespace Draco.Tests
             "test_nm.obj.edgebreaker.cl10.2.2.drc",
             "test_nm.obj.edgebreaker.cl4.2.2.drc",
             "test_nm.obj.sequential.cl3.2.2.drc",
-            
+
             // // Legacy versions not supported
             // "cube_pc.drc",
             // "pc_color.drc",
@@ -46,12 +47,13 @@ namespace Draco.Tests
             // "test_nm.obj.sequential.1.0.0.drc",
             // "test_nm.obj.sequential.1.1.0.drc",
             // "test_nm_quant.0.9.0.drc",
-            
+
             // // Unknown why it does not work
             // "cube_att.drc",
         })]
-        public IEnumerator LoadDracoOfficialTestData(string url) {
-            yield return RunTest(k_URLPrefix+url);
+        public IEnumerator LoadDracoOfficialTestData(string url)
+        {
+            yield return RunTest(k_URLPrefix + url);
         }
 
         [UnityTest]
@@ -68,10 +70,11 @@ namespace Draco.Tests
             "test_nm.obj.edgebreaker.cl4.2.2.drc",
             "test_nm.obj.sequential.cl3.2.2.drc",
         })]
-        public IEnumerator LoadDracoOfficialTestDataNormals(string url) {
-            yield return RunTest(k_URLPrefix+url,true);
+        public IEnumerator LoadDracoOfficialTestDataNormals(string url)
+        {
+            yield return RunTest(k_URLPrefix + url, true);
         }
-        
+
         [UnityTest]
         [UseDracoTestFileCase(new[] {
             "bunny_gltf.drc",
@@ -86,54 +89,64 @@ namespace Draco.Tests
             "test_nm.obj.edgebreaker.cl4.2.2.drc",
             "test_nm.obj.sequential.cl3.2.2.drc",
         })]
-        public IEnumerator LoadDracoOfficialTestDataNormalsTangents(string url) {
-            yield return RunTest(k_URLPrefix+url,true, true);
+        public IEnumerator LoadDracoOfficialTestDataNormalsTangents(string url)
+        {
+            yield return RunTest(k_URLPrefix + url, true, true);
         }
-        
-        IEnumerator RunTest(string url, bool requireNormals = false, bool requireTangents = false) {
+
+        IEnumerator RunTest(string url, bool requireNormals = false, bool requireTangents = false)
+        {
             var webRequest = UnityWebRequest.Get(url);
             yield return webRequest.SendWebRequest();
-            if(!string.IsNullOrEmpty(webRequest.error)) {
-                Debug.LogErrorFormat("Error loading {0}: {1}",url,webRequest.error);
+            if (!string.IsNullOrEmpty(webRequest.error))
+            {
+                Debug.LogErrorFormat("Error loading {0}: {1}", url, webRequest.error);
                 yield break;
             }
 
-            var data = new NativeArray<byte>(webRequest.downloadHandler.data,Allocator.Persistent);
-            
+            var data = new NativeArray<byte>(webRequest.downloadHandler.data, Allocator.Persistent);
+
             var task = LoadBatch(1, data, requireNormals, requireTangents);
-            while (!task.IsCompleted) {
+            while (!task.IsCompleted)
+            {
                 yield return null;
             }
             Assert.IsNull(task.Exception);
             data.Dispose();
         }
-        
-        async Task LoadBatch(int quantity, NativeArray<byte> data, bool requireNormals = false, bool requireTangents = false) {
+
+        async Task LoadBatch(int quantity, NativeArray<byte> data, bool requireNormals = false, bool requireTangents = false)
+        {
 
             var tasks = new List<Task<Mesh>>(quantity);
-        
+
             for (var i = 0; i < quantity; i++)
             {
                 DracoMeshLoader dracoLoader = new DracoMeshLoader();
-                var task = dracoLoader.ConvertDracoMeshToUnity(data,requireNormals,requireTangents);
+                var task = dracoLoader.ConvertDracoMeshToUnity(data, requireNormals, requireTangents);
                 tasks.Add(task);
             }
 
-            while (tasks.Count > 0) {
+            while (tasks.Count > 0)
+            {
                 var task = await Task.WhenAny(tasks);
                 tasks.Remove(task);
                 var mesh = await task;
-                if (mesh == null) {
+                if (mesh == null)
+                {
                     Debug.LogError("Loading mesh failed");
                 }
-                else {
-                    if (requireNormals) {
+                else
+                {
+                    if (requireNormals)
+                    {
                         var normals = mesh.normals;
-                        Assert.Greater(normals.Length,0);
+                        Assert.Greater(normals.Length, 0);
                     }
-                    if (requireTangents) {
+                    if (requireTangents)
+                    {
                         var tangents = mesh.tangents;
-                        Assert.Greater(tangents.Length,0);
+                        Assert.Greater(tangents.Length, 0);
                     }
                 }
             }
@@ -141,16 +154,18 @@ namespace Draco.Tests
         }
 
         [UnityTest]
-        public IEnumerator EncodePointCloud() {
-            
+        public IEnumerator EncodePointCloud()
+        {
+
             var sphereGo = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             var sphere = sphereGo.GetComponent<MeshFilter>().sharedMesh;
             var vertices = sphere.vertices;
-            
-            var mesh = new Mesh {
+
+            var mesh = new Mesh
+            {
                 subMeshCount = 1
             };
-            mesh.SetSubMesh(0,new SubMeshDescriptor(0,0,MeshTopology.Points));
+            mesh.SetSubMesh(0, new SubMeshDescriptor(0, 0, MeshTopology.Points));
             mesh.vertices = vertices;
 
             var task = Encoder.DracoEncoder.EncodeMesh(mesh);

@@ -5,22 +5,26 @@ using System;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace Draco {
+namespace Draco
+{
 
     /// <summary>
     /// Decodes multiple Draco data and assigns it to <see cref="MeshFilter"/> targets.
     /// </summary>
-    public class DracoDecoder : MonoBehaviour {
+    public class DracoDecoder : MonoBehaviour
+    {
 
         /// <summary>
         /// Decode instances (one per Draco mesh)
         /// </summary>
         public DracoDecodeInstance[] instances;
 
-        async void Start() {
+        async void Start()
+        {
             var startTime = Time.realtimeSinceStartup;
             var tasks = new Task[instances.Length];
-            for (var i = 0; i < instances.Length; i++) {
+            for (var i = 0; i < instances.Length; i++)
+            {
                 var instance = instances[i];
                 tasks[i] = instance.Decode();
             }

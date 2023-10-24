@@ -1,4 +1,4 @@
-﻿// SPDX-FileCopyrightText: 2023 Unity Technologies and the Draco for Unity authors
+// SPDX-FileCopyrightText: 2023 Unity Technologies and the Draco for Unity authors
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -10,39 +10,48 @@ using NUnit.Framework.Internal;
 using NUnit.Framework.Internal.Builders;
 using UnityEngine;
 
-namespace Draco.Tests {
+namespace Draco.Tests
+{
 
-    public class UseDracoTestFileCaseAttribute : UnityEngine.TestTools.UnityTestAttribute, ITestBuilder {
+    public class UseDracoTestFileCaseAttribute : UnityEngine.TestTools.UnityTestAttribute, ITestBuilder
+    {
 
         string[] m_sampleSet = null;
 
         NUnitTestCaseBuilder _builder = new NUnitTestCaseBuilder();
 
-        public UseDracoTestFileCaseAttribute(string[] sampleSetPath) {
+        public UseDracoTestFileCaseAttribute(string[] sampleSetPath)
+        {
             m_sampleSet = sampleSetPath;
         }
 
-        IEnumerable<TestMethod> ITestBuilder.BuildFrom(IMethodInfo method, Test suite) {
+        IEnumerable<TestMethod> ITestBuilder.BuildFrom(IMethodInfo method, Test suite)
+        {
             List<TestMethod> results = new List<TestMethod>();
             var nameCounts = new Dictionary<string, int>();
 
-            if (m_sampleSet == null) {
+            if (m_sampleSet == null)
+            {
                 throw new Exception("SampleSet not set");
             }
 
-            try {
-                foreach (var testCase in m_sampleSet) {
+            try
+            {
+                foreach (var testCase in m_sampleSet)
+                {
                     var data = new TestCaseData(new object[] { testCase });
 
                     var uri = new Uri(testCase, UriKind.RelativeOrAbsolute);
 
                     var origName = Path.GetFileName(testCase);
                     string name;
-                    if (nameCounts.TryGetValue(origName, out int count)) {
+                    if (nameCounts.TryGetValue(origName, out int count))
+                    {
                         name = string.Format("{0}-{1}", origName, count);
                         nameCounts[origName] = count + 1;
                     }
-                    else {
+                    else
+                    {
                         name = origName;
                         nameCounts[origName] = 1;
                     }
@@ -60,7 +69,8 @@ namespace Draco.Tests {
                     results.Add(test);
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Console.WriteLine("Failed to generate glTF testcases!");
                 Debug.LogException(ex);
                 throw;

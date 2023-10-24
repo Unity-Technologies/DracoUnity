@@ -1,4 +1,4 @@
-﻿// SPDX-FileCopyrightText: 2023 Unity Technologies and the Draco for Unity authors
+// SPDX-FileCopyrightText: 2023 Unity Technologies and the Draco for Unity authors
 // SPDX-License-Identifier: Apache-2.0
 
 using System.IO;
@@ -9,12 +9,15 @@ using UnityEditor.AssetImporters;
 using UnityEditor.Experimental.AssetImporters;
 #endif
 
-namespace Draco.Editor {
+namespace Draco.Editor
+{
 
     [ScriptedImporter(1, "drc")]
-    class DracoImporter : ScriptedImporter {
+    class DracoImporter : ScriptedImporter
+    {
 
-        public override async void OnImportAsset(AssetImportContext ctx) {
+        public override async void OnImportAsset(AssetImportContext ctx)
+        {
 #if NET_UNITY_4_8 // Unity 2021 or newer
             var dracoData = await File.ReadAllBytesAsync(ctx.assetPath);
 #else
@@ -22,7 +25,8 @@ namespace Draco.Editor {
 #endif
             var draco = new DracoMeshLoader();
             var mesh = await draco.ConvertDracoMeshToUnitySync(dracoData);
-            if (mesh == null) {
+            if (mesh == null)
+            {
                 Debug.LogError("Import draco file failed");
                 return;
             }

@@ -12,7 +12,7 @@ namespace SubPackage
         public string minimumUnityVersion;
         public string name;
         public string version;
-        
+
         public string fullName => $"{name}@{version}";
     }
 }

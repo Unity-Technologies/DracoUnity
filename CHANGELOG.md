@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed Editor-only `sync` parameter from `DracoMeshLoader.ConvertDracoMeshToUnity` to make API stable (regardless of environment/scripting defines)
 - WebGL native libraries are now installed via sub-packages
 - Minimum required Unity version was decreased to 2020.3 (possible because the WebGL version restriction was lifted with the sub-packages)
+- Automatic code formatting was applied to all source files
 
 ### Removed
 - Obsolete console error about downgrading package for certain Unity versions

@@ -13,14 +13,16 @@ using UnityEngine;
 using UnityEngine.Profiling;
 using UnityEngine.Rendering;
 
-namespace Draco.Encoder {
+namespace Draco.Encoder
+{
 
     /// <summary>
     /// Contains encoded data and additional meta information.
     /// The responsibility to dispose this struct and the native resources behind it (via <see cref="Dispose"/>)
     /// is handed over to the receiver.
     /// </summary>
-    public unsafe struct EncodeResult : IDisposable {
+    public unsafe struct EncodeResult : IDisposable
+    {
 
         /// <summary>Number of triangle indices</summary>
         public uint indexCount;
@@ -29,7 +31,7 @@ namespace Draco.Encoder {
         /// <summary>Encoded data</summary>
         public NativeArray<byte> data;
         /// <summary>Vertex attribute to Draco property ID mapping</summary>
-        public Dictionary<VertexAttribute,(uint identifier,int dimensions)> vertexAttributes;
+        public Dictionary<VertexAttribute, (uint identifier, int dimensions)> vertexAttributes;
 
         IntPtr m_DracoEncoder;
 
@@ -49,7 +51,7 @@ namespace Draco.Encoder {
             IntPtr dracoEncoder,
             uint indexCount,
             uint vertexCount,
-            Dictionary<VertexAttribute,(uint identifier,int dimensions)> vertexAttributes
+            Dictionary<VertexAttribute, (uint identifier, int dimensions)> vertexAttributes
             )
         {
             m_DracoEncoder = dracoEncoder;
@@ -63,7 +65,7 @@ namespace Draco.Encoder {
 #endif
             this.vertexAttributes = vertexAttributes;
         }
-        
+
         /// <summary>
         /// Releases allocated resources.
         /// </summary>
@@ -73,24 +75,26 @@ namespace Draco.Encoder {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.Release(m_SafetyHandle);
 #endif
-            if(m_DracoEncoder!=IntPtr.Zero)
+            if (m_DracoEncoder != IntPtr.Zero)
                 DracoEncoder.dracoEncoderRelease(m_DracoEncoder);
             m_DracoEncoder = IntPtr.Zero;
         }
     }
-    
+
     /// <summary>
     /// Provides Draco encoding capabilities.
     /// </summary>
-    public static class DracoEncoder {
-        
+    public static class DracoEncoder
+    {
+
 #if UNITY_EDITOR_OSX || UNITY_WEBGL || UNITY_IOS
         const string k_DracoEncUnityLib = "__Internal";
 #elif UNITY_ANDROID || UNITY_STANDALONE || UNITY_WSA || UNITY_EDITOR || PLATFORM_LUMIN
         const string k_DracoEncUnityLib = "dracoenc_unity";
 #endif
 
-        struct AttributeData {
+        struct AttributeData
+        {
             public int stream;
             public int offset;
         }
@@ -101,14 +105,16 @@ namespace Draco.Encoder {
         /// <param name="largestDimension">Length of the largest dimension (width/depth/height)</param>
         /// <param name="precision">Desired minimum precision in world units</param>
         /// <returns>Ideal quantization in bits</returns>
-        static int GetIdealQuantization(float largestDimension, float precision) {
+        static int GetIdealQuantization(float largestDimension, float precision)
+        {
             var value = Mathf.RoundToInt(largestDimension / precision);
             var mostSignificantBit = -1;
-            while (value > 0) {
+            while (value > 0)
+            {
                 mostSignificantBit++;
                 value >>= 1;
             }
-            return Mathf.Clamp(mostSignificantBit,4,24);
+            return Mathf.Clamp(mostSignificantBit, 4, 24);
         }
 
         /// <summary>
@@ -119,7 +125,8 @@ namespace Draco.Encoder {
         /// <param name="precision">Desired minimum precision in world units</param>
         /// <param name="bounds"></param>
         /// <returns>Ideal quantization in bits</returns>
-        static int GetIdealQuantization(Vector3 worldScale, float precision, Bounds bounds) {
+        static int GetIdealQuantization(Vector3 worldScale, float precision, Bounds bounds)
+        {
             var scale = new Vector3(Mathf.Abs(worldScale.x), Mathf.Abs(worldScale.y), Mathf.Abs(worldScale.z));
             var maxSize = Mathf.Max(
                 bounds.extents.x * scale.x,
@@ -158,7 +165,8 @@ namespace Draco.Encoder {
             )
         {
 #if !UNITY_EDITOR
-            if (!unityMesh.isReadable) {
+            if (!unityMesh.isReadable)
+            {
                 Debug.LogError("Mesh is not readable");
                 return null;
             }
@@ -244,7 +252,8 @@ namespace Draco.Encoder {
             int texCoordQuantization = 12,
             int colorQuantization = 8,
             int genericQuantization = 12
-        ) {
+        )
+        {
             var dataArray = Mesh.AcquireReadOnlyMeshData(unityMesh);
             var data = dataArray[0];
 
@@ -259,7 +268,7 @@ namespace Draco.Encoder {
                 colorQuantization,
                 genericQuantization
             );
-            
+
             dataArray.Dispose();
             return result;
         }
@@ -302,13 +311,13 @@ namespace Draco.Encoder {
             }
 #endif
             Profiler.BeginSample("EncodeMesh.Prepare");
-            
+
             var result = new EncodeResult[meshData.subMeshCount];
             var vertexAttributes = mesh.GetVertexAttributes();
 
             var strides = new int[DracoNative.maxStreamCount];
             var attributeDataDict = new Dictionary<VertexAttribute, AttributeData>();
-            
+
             foreach (var attribute in vertexAttributes) {
                 var attributeData = new AttributeData { offset = strides[attribute.stream], stream = attribute.stream };
                 var size = attribute.dimension * GetAttributeSize(attribute.format);
@@ -330,18 +339,18 @@ namespace Draco.Encoder {
 
             var vDataPtr = GetReadOnlyPointers(streamCount, vData);
             Profiler.EndSample(); // EncodeMesh.Prepare
-            
+
             for (var submeshIndex = 0; submeshIndex < mesh.subMeshCount; submeshIndex++) {
 
                 Profiler.BeginSample("EncodeMesh.Submesh.Prepare");
                 var submesh = mesh.GetSubMesh(submeshIndex);
-                
+
                 if (submesh.topology != MeshTopology.Triangles && submesh.topology != MeshTopology.Points) {
                     Debug.LogError($"Mesh topology {submesh.topology} is not supported");
                     return null;
                 }
-                
-                var dracoEncoder = submesh.topology == MeshTopology.Triangles 
+
+                var dracoEncoder = submesh.topology == MeshTopology.Triangles
                     ? dracoEncoderCreate(mesh.vertexCount)
                     : dracoEncoderCreatePointCloud(mesh.vertexCount);
 
@@ -381,7 +390,7 @@ namespace Draco.Encoder {
                     UnsafeUtility.ReleaseGCObject(gcHandle);
                 }
 
-                // For both encoding and decoding (0 = slow and best compression; 10 = fast) 
+                // For both encoding and decoding (0 = slow and best compression; 10 = fast)
                 dracoEncoderSetCompressionSpeed(dracoEncoder, Mathf.Clamp(encodingSpeed,0,10), Mathf.Clamp(decodingSpeed,0,10));
                 dracoEncoderSetQuantizationBits(
                     dracoEncoder,
@@ -396,7 +405,7 @@ namespace Draco.Encoder {
                 {
                     dracoEncoder = dracoEncoder
                 };
-                
+
                 Profiler.EndSample(); //EncodeMesh.Submesh.Prepare
 
                 var jobHandle = encodeJob.Schedule();
@@ -405,7 +414,7 @@ namespace Draco.Encoder {
                     await Task.Yield();
                 }
                 jobHandle.Complete();
-                
+
                 Profiler.BeginSample("EncodeMesh.Submesh.Aftermath");
 
                 result[submeshIndex] = new EncodeResult (
@@ -414,10 +423,10 @@ namespace Draco.Encoder {
                     dracoEncoderGetEncodedVertexCount(dracoEncoder),
                     attributeIds
                 );
-                
+
                 Profiler.EndSample(); // EncodeMesh.Submesh.Aftermath
             }
-            
+
             Profiler.BeginSample("EncodeMesh.Aftermath");
             for (var stream = 0; stream < streamCount; stream++) {
                 vData[stream].Dispose();
@@ -439,15 +448,18 @@ namespace Draco.Encoder {
         static unsafe IntPtr[] GetReadOnlyPointers(int count, NativeArray<byte>[] vData)
         {
             var result = new IntPtr[count];
-            for (var stream = 0; stream < count; stream++) {
-                result[stream] = (IntPtr) vData[stream].GetUnsafeReadOnlyPtr();
+            for (var stream = 0; stream < count; stream++)
+            {
+                result[stream] = (IntPtr)vData[stream].GetUnsafeReadOnlyPtr();
             }
 
             return result;
         }
 
-        static DataType GetDataType(VertexAttributeFormat format) {
-            switch (format) {
+        static DataType GetDataType(VertexAttributeFormat format)
+        {
+            switch (format)
+            {
                 case VertexAttributeFormat.Float32:
                 case VertexAttributeFormat.Float16:
                     return DataType.Float32;
@@ -471,8 +483,10 @@ namespace Draco.Encoder {
             }
         }
 
-        static AttributeType GetAttributeType(VertexAttribute attribute) {
-            switch (attribute) {
+        static AttributeType GetAttributeType(VertexAttribute attribute)
+        {
+            switch (attribute)
+            {
                 case VertexAttribute.Position:
                     return AttributeType.Position;
                 case VertexAttribute.Normal:
@@ -497,8 +511,10 @@ namespace Draco.Encoder {
             }
         }
 
-        static unsafe int GetAttributeSize(VertexAttributeFormat format) {
-            switch (format) {
+        static unsafe int GetAttributeSize(VertexAttributeFormat format)
+        {
+            switch (format)
+            {
                 case VertexAttributeFormat.Float32:
                     return sizeof(float);
                 case VertexAttributeFormat.Float16:
@@ -527,36 +543,36 @@ namespace Draco.Encoder {
                     throw new ArgumentOutOfRangeException(nameof(format), format, null);
             }
         }
-        
-        [DllImport (k_DracoEncUnityLib)]
+
+        [DllImport(k_DracoEncUnityLib)]
         static extern IntPtr dracoEncoderCreate(int vertexCount);
-        
+
         [DllImport(k_DracoEncUnityLib)]
         static extern IntPtr dracoEncoderCreatePointCloud(int vertexCount);
 
-        [DllImport (k_DracoEncUnityLib)]
+        [DllImport(k_DracoEncUnityLib)]
         internal static extern void dracoEncoderRelease(IntPtr encoder);
-        
-        [DllImport (k_DracoEncUnityLib)]
-        static extern void dracoEncoderSetCompressionSpeed(IntPtr encoder, int encodingSpeed, int decodingSpeed);
-        
-        [DllImport (k_DracoEncUnityLib)]
-        static extern void dracoEncoderSetQuantizationBits(IntPtr encoder, int position, int normal, int uv, int color, int generic);
-        
-        [DllImport (k_DracoEncUnityLib)]
-        internal static extern bool dracoEncoderEncode(IntPtr encoder, bool preserveTriangleOrder);
-        
-        [DllImport (k_DracoEncUnityLib)]
-        static extern uint dracoEncoderGetEncodedVertexCount(IntPtr encoder);
-        
-        [DllImport (k_DracoEncUnityLib)]
-        static extern uint dracoEncoderGetEncodedIndexCount(IntPtr encoder);
-        
-        [DllImport (k_DracoEncUnityLib)]
-        internal static extern unsafe void dracoEncoderGetEncodeBuffer(IntPtr encoder, out void *data, out ulong size);
 
-        
-        [DllImport (k_DracoEncUnityLib)]
+        [DllImport(k_DracoEncUnityLib)]
+        static extern void dracoEncoderSetCompressionSpeed(IntPtr encoder, int encodingSpeed, int decodingSpeed);
+
+        [DllImport(k_DracoEncUnityLib)]
+        static extern void dracoEncoderSetQuantizationBits(IntPtr encoder, int position, int normal, int uv, int color, int generic);
+
+        [DllImport(k_DracoEncUnityLib)]
+        internal static extern bool dracoEncoderEncode(IntPtr encoder, bool preserveTriangleOrder);
+
+        [DllImport(k_DracoEncUnityLib)]
+        static extern uint dracoEncoderGetEncodedVertexCount(IntPtr encoder);
+
+        [DllImport(k_DracoEncUnityLib)]
+        static extern uint dracoEncoderGetEncodedIndexCount(IntPtr encoder);
+
+        [DllImport(k_DracoEncUnityLib)]
+        internal static extern unsafe void dracoEncoderGetEncodeBuffer(IntPtr encoder, out void* data, out ulong size);
+
+
+        [DllImport(k_DracoEncUnityLib)]
         static extern bool dracoEncoderSetIndices(
             IntPtr encoder,
             DataType indexComponentType,
@@ -564,8 +580,8 @@ namespace Draco.Encoder {
             bool flip,
             IntPtr indices
             );
-        
-        [DllImport (k_DracoEncUnityLib)]
+
+        [DllImport(k_DracoEncUnityLib)]
         static extern uint dracoEncoderSetAttribute(
             IntPtr encoder,
             int attributeType,
@@ -580,7 +596,7 @@ namespace Draco.Encoder {
     {
         [NativeDisableUnsafePtrRestriction]
         public IntPtr dracoEncoder;
-        
+
         public void Execute()
         {
             DracoEncoder.dracoEncoderEncode(dracoEncoder, false);

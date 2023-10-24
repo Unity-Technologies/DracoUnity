@@ -19,39 +19,58 @@ using UnityEngine.Rendering;
 
 namespace Draco
 {
-
-    // These values must be exactly the same as the values in draco_types.h.
-    // Attribute data type.
+    /// <summary>
+    /// Attribute data type as defined in draco_types.h
+    /// </summary>
     enum DataType
     {
-        Invalid = 0, // DT_INVALID
-        Int8, // DT_INT8
-        UInt8, // DT_UINT8
-        Int16, // DT_INT16
-        UInt16, // DT_UINT16
-        Int32, // DT_INT32
-        UInt32, // DT_UINT32
-        Int64, // DT_INT64
-        UInt64, // DT_UINT64
-        Float32, // DT_FLOAT32
-        Float64, // DT_FLOAT64
-        Bool // DT_BOOL
+        ///<summary>DT_INVALID</summary>
+        Invalid = 0,
+        ///<summary>DT_INT8</summary>
+        Int8,
+        ///<summary>DT_UINT8</summary>
+        UInt8,
+        ///<summary>DT_INT16</summary>
+        Int16,
+        ///<summary>DT_UINT16</summary>
+        UInt16,
+        ///<summary>DT_INT32</summary>
+        Int32,
+        ///<summary>DT_UINT32</summary>
+        UInt32,
+        ///<summary>DT_INT64</summary>
+        Int64,
+        ///<summary>DT_UINT64</summary>
+        UInt64,
+        ///<summary>DT_FLOAT32</summary>
+        Float32,
+        ///<summary>DT_FLOAT64</summary>
+        Float64,
+        ///<summary>DT_BOOL</summary>
+        Bool
     }
 
-    // These values must be exactly the same as the values in
-    // geometry_attribute.h.
-    // Attribute type.
+    /// <summary>
+    /// GeometryAttribute::Type as defined in geometry_attribute.h
+    /// </summary>
     enum AttributeType
     {
-        Invalid = -1, // INVALID
-        Position = 0, // POSITION
-        Normal, // NORMAL
-        Color, // COLOR
-        TextureCoordinate, // TEX_COORD
-        // A special id used to mark attributes that are not assigned to any known
-        // predefined use case. Such attributes are often used for a shader specific
-        // data.
-        Generic // GENERIC
+        ///<summary>GeometryAttribute::Type::INVALID</summary>
+        Invalid = -1,
+        ///<summary>GeometryAttribute::Type::POSITION</summary>
+        Position = 0,
+        ///<summary>GeometryAttribute::Type::NORMAL</summary>
+        Normal,
+        ///<summary>GeometryAttribute::Type::COLOR</summary>
+        Color,
+        ///<summary>GeometryAttribute::Type::TEX_COORD</summary>
+        TextureCoordinate,
+        ///<summary>
+        /// GeometryAttribute::Type::GENERIC.
+        /// A special id used to mark attributes that are not assigned to any known predefined use case.
+        /// Such attributes are often used for a shader specific data.
+        /// </summary>
+        Generic
     }
 
     [BurstCompile]
@@ -643,49 +662,97 @@ namespace Draco
             public IndexFormat indexFormat => numVertices >= ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16;
         }
 
-        // Release data associated with DracoMesh.
+        /// <summary>
+        /// Release data associated with DracoMesh.
+        /// </summary>
+        /// <param name="mesh">Draco mesh</param>
         [DllImport(k_DracoDecUnityLib)]
         static extern void ReleaseDracoMesh(
             DracoMesh** mesh);
-        // Release data associated with DracoAttribute.
+
+        /// <summary>
+        /// Release data associated with DracoAttribute.
+        /// </summary>
+        /// <param name="attr">Draco attribute</param>
         [DllImport(k_DracoDecUnityLib)]
         static extern void
             ReleaseDracoAttribute(DracoAttribute** attr);
-        // Release attribute data.
+
+        /// <summary>
+        /// Release attribute data.
+        /// </summary>
+        /// <param name="data">Draco data</param>
         [DllImport(k_DracoDecUnityLib)]
         static extern void ReleaseDracoData(
             DracoData** data);
 
-        // Decodes compressed Draco::Mesh in buffer to mesh. On input, mesh
-        // must be null. The returned mesh must released with ReleaseDracoMesh.
+        /// <summary>
+        /// Initializes decoding of a compressed Draco mesh.
+        /// Has to be continued by calling <see cref="DecodeDracoMeshStep2"/> (if no error occured).
+        /// The returned mesh must released with <see cref="ReleaseDracoMesh"/>.
+        /// </summary>
+        /// <param name="buffer">Pointer to compressed Draco input data</param>
+        /// <param name="length">Length of input buffer</param>
+        /// <param name="mesh">Resulting mesh pointer</param>
+        /// <param name="decoder">Resulting decoder instance pointer</param>
+        /// <param name="decoderBuffer">Resulting decoder buffer pointer</param>
+        /// <returns>Draco error code</returns>
         [DllImport(k_DracoDecUnityLib)]
         static extern int DecodeDracoMeshStep1(
             byte* buffer, int length, DracoMesh** mesh, void** decoder, void** decoderBuffer);
 
-        // Decodes compressed Draco::Mesh in buffer to mesh. On input, mesh
-        // must be null. The returned mesh must released with ReleaseDracoMesh.
+
+        /// <summary>
+        /// Decodes compressed DracoMesh.
+        /// Comes after calling <see cref="DecodeDracoMeshStep1"/>.
+        /// Mesh must released with <see cref="ReleaseDracoMesh"/>.
+        /// </summary>
+        /// <param name="mesh">Draco mesh instance pointer</param>
+        /// <param name="decoder">Draco decoder instance pointer</param>
+        /// <param name="decoderBuffer">Decoder buffer pointer</param>
+        /// <returns>Draco error code</returns>
         [DllImport(k_DracoDecUnityLib)]
         static extern int DecodeDracoMeshStep2(
             DracoMesh** mesh, void* decoder, void* decoderBuffer);
 
-        // Returns the DracoAttribute at index in mesh. On input, attribute must be
-        // null. The returned attr must be released with ReleaseDracoAttribute.
-        // Unused currently, thus commented.
+        // /// <summary>
+        // /// Returns the DracoAttribute at index in mesh. On input, attribute must be
+        // /// null. The returned attr must be released with ReleaseDracoAttribute.
+        // /// Unused currently, thus commented.
+        // /// </summary>
+        // /// <param name="mesh">Draco mesh</param>
+        // /// <param name="index">Attribute index</param>
+        // /// <param name="attr">Resulting attribute pointer</param>
+        // /// <returns>True if the attribute was retrieved successfully. False otherwise.</returns>
         // [DllImport (k_DracoDecUnityLib)]
         // static extern bool GetAttribute(
         //     DracoMesh* mesh, int index, DracoAttribute**attr);
 
-        // Returns the DracoAttribute of type at index in mesh. On input, attribute
-        // must be null. E.g. If the mesh has two texture coordinates then
-        // GetAttributeByType(mesh, AttributeType.TEX_COORD, 1, &attr); will return
-        // the second TEX_COORD attribute. The returned attr must be released with
-        // ReleaseDracoAttribute.
+        /// <summary>
+        /// Returns the DracoAttribute of type at index in mesh. On input, attribute
+        /// must be null. E.g. If the mesh has two texture coordinates then
+        /// GetAttributeByType(mesh, AttributeType.TEX_COORD, 1, &amp;attr); will return
+        /// the second TEX_COORD attribute. The returned attr must be released with
+        /// ReleaseDracoAttribute.
+        /// </summary>
+        /// <param name="mesh">Draco mesh</param>
+        /// <param name="type">Attribute type</param>
+        /// <param name="index">Per attribute type sub-index</param>
+        /// <param name="attr">Resulting attribute pointer</param>
+        /// <returns>True if the attribute was retrieved successfully. False otherwise.</returns>
         [DllImport(k_DracoDecUnityLib)]
         static extern bool GetAttributeByType(
             DracoMesh* mesh, AttributeType type, int index, DracoAttribute** attr);
-        // Returns the DracoAttribute with unique_id in mesh. On input, attribute
-        // must be null.The returned attr must be released with
-        // ReleaseDracoAttribute.
+
+        /// <summary>
+        /// Returns the DracoAttribute with unique_id in mesh. On input, attribute
+        /// must be null.The returned attr must be released with
+        /// ReleaseDracoAttribute.
+        /// </summary>
+        /// <param name="mesh">Draco mesh</param>
+        /// <param name="uniqueID">Unique ID</param>
+        /// <param name="attr">Resulting attribute pointer</param>
+        /// <returns>True if the attribute was retrieved successfully. False otherwise.</returns>
         [DllImport(k_DracoDecUnityLib)]
         static extern bool
             GetAttributeByUniqueId(DracoMesh* mesh, int uniqueID,
@@ -711,9 +778,17 @@ namespace Draco
             bool flip
             );
 
-        // Returns an array of attribute data as well as the type of data in
-        // data_type. On input, data must be null. The returned data must be
-        // released with ReleaseDracoData.
+        /// <summary>
+        /// Returns an array of attribute data as well as the type of data in
+        /// data_type. On input, data must be null. The returned data must be
+        /// released with ReleaseDracoData.
+        /// </summary>
+        /// <param name="mesh">Draco mesh</param>
+        /// <param name="attr">Attribute</param>
+        /// <param name="data">Resulting data</param>
+        /// <param name="flip">Determines whether a space conversion should be applied (flips one axis)</param>
+        /// <param name="componentStride">Component stride</param>
+        /// <returns>True if retrieving data was successful. False otherwise.</returns>
         [DllImport(k_DracoDecUnityLib)]
         static extern bool GetAttributeData(
             DracoMesh* mesh, DracoAttribute* attr, DracoData** data, bool flip, int componentStride);

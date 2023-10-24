@@ -5,5 +5,6 @@
 *.a binary filter=lfs diff=lfs merge=lfs
 *.bundle binary filter=lfs diff=lfs merge=lfs
 dracodec_unity binary filter=lfs diff=lfs merge=lfs
+draco_unity binary filter=lfs diff=lfs merge=lfs
 *.dll binary filter=lfs diff=lfs merge=lfs
 *.bc binary filter=lfs diff=lfs merge=lfs

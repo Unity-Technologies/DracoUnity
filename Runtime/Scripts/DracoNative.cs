@@ -78,9 +78,9 @@ namespace Draco
     {
 
 #if !UNITY_EDITOR && (UNITY_WEBGL || UNITY_IOS)
-        const string k_DracoDecUnityLib = "__Internal";
+        internal const string dracoUnityLib = "__Internal";
 #elif UNITY_ANDROID || UNITY_STANDALONE || UNITY_WSA || UNITY_EDITOR || PLATFORM_LUMIN
-        const string k_DracoDecUnityLib = "dracodec_unity";
+        internal const string dracoUnityLib = "draco_unity";
 #endif
 
         public const int maxStreamCount = 4;
@@ -666,7 +666,7 @@ namespace Draco
         /// Release data associated with DracoMesh.
         /// </summary>
         /// <param name="mesh">Draco mesh</param>
-        [DllImport(k_DracoDecUnityLib)]
+        [DllImport(dracoUnityLib)]
         static extern void ReleaseDracoMesh(
             DracoMesh** mesh);
 
@@ -674,7 +674,7 @@ namespace Draco
         /// Release data associated with DracoAttribute.
         /// </summary>
         /// <param name="attr">Draco attribute</param>
-        [DllImport(k_DracoDecUnityLib)]
+        [DllImport(dracoUnityLib)]
         static extern void
             ReleaseDracoAttribute(DracoAttribute** attr);
 
@@ -682,7 +682,7 @@ namespace Draco
         /// Release attribute data.
         /// </summary>
         /// <param name="data">Draco data</param>
-        [DllImport(k_DracoDecUnityLib)]
+        [DllImport(dracoUnityLib)]
         static extern void ReleaseDracoData(
             DracoData** data);
 
@@ -697,7 +697,7 @@ namespace Draco
         /// <param name="decoder">Resulting decoder instance pointer</param>
         /// <param name="decoderBuffer">Resulting decoder buffer pointer</param>
         /// <returns>Draco error code</returns>
-        [DllImport(k_DracoDecUnityLib)]
+        [DllImport(dracoUnityLib)]
         static extern int DecodeDracoMeshStep1(
             byte* buffer, int length, DracoMesh** mesh, void** decoder, void** decoderBuffer);
 
@@ -711,7 +711,7 @@ namespace Draco
         /// <param name="decoder">Draco decoder instance pointer</param>
         /// <param name="decoderBuffer">Decoder buffer pointer</param>
         /// <returns>Draco error code</returns>
-        [DllImport(k_DracoDecUnityLib)]
+        [DllImport(dracoUnityLib)]
         static extern int DecodeDracoMeshStep2(
             DracoMesh** mesh, void* decoder, void* decoderBuffer);
 
@@ -740,7 +740,7 @@ namespace Draco
         /// <param name="index">Per attribute type sub-index</param>
         /// <param name="attr">Resulting attribute pointer</param>
         /// <returns>True if the attribute was retrieved successfully. False otherwise.</returns>
-        [DllImport(k_DracoDecUnityLib)]
+        [DllImport(dracoUnityLib)]
         static extern bool GetAttributeByType(
             DracoMesh* mesh, AttributeType type, int index, DracoAttribute** attr);
 
@@ -753,7 +753,7 @@ namespace Draco
         /// <param name="uniqueID">Unique ID</param>
         /// <param name="attr">Resulting attribute pointer</param>
         /// <returns>True if the attribute was retrieved successfully. False otherwise.</returns>
-        [DllImport(k_DracoDecUnityLib)]
+        [DllImport(dracoUnityLib)]
         static extern bool
             GetAttributeByUniqueId(DracoMesh* mesh, int uniqueID,
                 DracoAttribute** attr);
@@ -769,7 +769,7 @@ namespace Draco
         /// <param name="indicesCount">Number of indices (equals triangle count * 3)</param>
         /// <param name="flip">If true, triangle vertex order is reverted</param>
         /// <returns>True if extraction succeeded, false otherwise</returns>
-        [DllImport(k_DracoDecUnityLib)]
+        [DllImport(dracoUnityLib)]
         static extern bool GetMeshIndices(
             DracoMesh* mesh,
             DataType dataType,
@@ -789,7 +789,7 @@ namespace Draco
         /// <param name="flip">Determines whether a space conversion should be applied (flips one axis)</param>
         /// <param name="componentStride">Component stride</param>
         /// <returns>True if retrieving data was successful. False otherwise.</returns>
-        [DllImport(k_DracoDecUnityLib)]
+        [DllImport(dracoUnityLib)]
         static extern bool GetAttributeData(
             DracoMesh* mesh, DracoAttribute* attr, DracoData** data, bool flip, int componentStride);
 

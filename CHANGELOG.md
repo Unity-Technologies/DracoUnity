@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Support for efficient self-managed encoding of multiple meshes. Users may use the advanced Mesh API to acquire readable mesh data for multiple meshes at once and pass the data on to new `DracoEncoder.EncodeMesh` overloads that accept said `MeshData`.
 - Vertex attributes information (draco identifier and dimensions) was added to `EncodeResult`
+- Support for iOS simulator
+- Support for Windows ARM64 architecture.
 
 ### Changed
 - Much faster encoding due to the use of the C# Job System (threads)
@@ -20,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - WebGL native libraries are now installed via sub-packages
 - Minimum required Unity version was decreased to 2020.3 (possible because the WebGL version restriction was lifted with the sub-packages)
 - Automatic code formatting was applied to all source files
+- Consolidated split libraries into a single library named `draco_unity`
+- Updated Draco native library binaries to [3.0.0](https://github.com/Unity-Technologies/draco/releases/tag/unity%2F3.0.0)
 
 ### Removed
 - Obsolete console error about downgrading package for certain Unity versions

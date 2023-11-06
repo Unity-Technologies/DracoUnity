@@ -5,11 +5,11 @@ Unity package that integrates the [Draco 3D data compression library](https://go
 Following build targets are supported
 
 - WebGL
-- iOS (arm64 and armv7a)
+- iOS (device and simulator; arm64 and armv7a)
 - Android (x86, arm64 and armv7a)
-- Windows (64 and 32 bit)
+- Windows (x86 32-bit, x86 64-bit and ARM64)
 - Universal Windows Platform (x64,x86,ARM,ARM64)
-- macOS (Apple Silicon an Intel)
+- macOS (Apple Silicon and Intel)
 - Linux (64 bit)
 - Lumin / Magic Leap
 

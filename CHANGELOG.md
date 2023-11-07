@@ -152,7 +152,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance improvements
   - Two-step decoding allows to do more work of step two in threaded Jobs
   - Utilizes Advanced Mesh API
-  - Uses `MeshDataArray` to shift more work to Jobs (Unity 2020.2 and newer) 
+  - Uses `MeshDataArray` to shift more work to Jobs (Unity 2020.2 and newer)
 - Burst
 - Unit tests
 - Require Normals/Tangents parameter (necessity when using Advanced Mesh API). If true, even if the draco mesh does not have the required vertex attributes, buffers for them will get allocated and the values are calculated.
@@ -160,7 +160,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changes
 - API is now async/await based
-- Updated native Draco libraries (based on version 1.4.1) 
+- Updated native Draco libraries (based on version 1.4.1)
 
 ## [1.4.0] - 2021-01-31
 

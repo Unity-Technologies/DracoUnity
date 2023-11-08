@@ -2,7 +2,8 @@
     "name": "Draco",
     "rootNamespace": "",
     "references": [
-        "Unity.Burst"
+        "Unity.Burst",
+        "Unity.Mathematics"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

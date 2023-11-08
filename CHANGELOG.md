@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Destroying temporary copy (instead of original) GameObject when encoding selected GameObject from the menu
 - Reference assembly definitions in `DracoEncoder` by name instead of GUID to avoid package import errors.
+- Decoded mesh's bounds are calculated and returned/set accordingly.
 
 ## [4.1.0] - 2023-04-14
 

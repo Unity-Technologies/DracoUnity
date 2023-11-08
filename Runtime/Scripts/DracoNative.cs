@@ -10,6 +10,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Profiling;
@@ -115,6 +116,7 @@ namespace Draco
         Allocator m_Allocator;
         NativeArray<int> m_DracoDecodeResult;
         NativeArray<IntPtr> m_DracoTempResources;
+        NativeArray<float3> m_PositionMinMax;
 
         bool m_IsPointCloud;
 
@@ -138,8 +140,8 @@ namespace Draco
             bool convertSpace = true
             )
         {
-            this.m_ConvertSpace = convertSpace;
-            this.m_Mesh = mesh;
+            m_ConvertSpace = convertSpace;
+            m_Mesh = mesh;
         }
 
         public JobHandle Init(IntPtr encodedData, int size)
@@ -424,35 +426,81 @@ namespace Draco
                 // weights were removed from attributes before
                 if (map.attribute == VertexAttribute.BlendIndices) continue; // Blend
 
+                var calculateBound = map.attribute == VertexAttribute.Position;
+                if (calculateBound)
+                {
+                    Assert.IsFalse(m_PositionMinMax.IsCreated, "Multiple position attributes are not supported");
+                    Assert.AreEqual(3, map.numComponents, "Positions have to be 3 dimensional");
+                    m_PositionMinMax = new NativeArray<float3>(2, Allocator.TempJob);
+                }
+
                 if (m_StreamMemberCount[map.stream] > 1)
                 {
-                    var job = new GetDracoDataInterleavedJob()
+                    if (calculateBound)
                     {
-                        result = m_DracoDecodeResult,
-                        dracoTempResources = m_DracoTempResources,
-                        attribute = map.dracoAttribute,
-                        stride = m_StreamStrides[map.stream],
-                        flip = map.convertSpace,
-                        componentStride = map.numComponents,
-                        mesh = m_Mesh,
-                        streamIndex = map.stream,
-                        offset = map.offset
-                    };
-                    jobHandles[jobIndex] = job.Schedule(decodeVerticesJobHandle);
+                        var job = new GetDracoDataInterleavedBoundsJob()
+                        {
+                            result = m_DracoDecodeResult,
+                            dracoTempResources = m_DracoTempResources,
+                            attribute = map.dracoAttribute,
+                            stride = m_StreamStrides[map.stream],
+                            flip = map.convertSpace,
+                            componentStride = map.numComponents,
+                            mesh = m_Mesh,
+                            streamIndex = map.stream,
+                            offset = map.offset,
+                            bounds = m_PositionMinMax,
+                        };
+                        jobHandles[jobIndex] = job.Schedule(decodeVerticesJobHandle);
+                    }
+                    else
+                    {
+                        var job = new GetDracoDataInterleavedJob()
+                        {
+                            result = m_DracoDecodeResult,
+                            dracoTempResources = m_DracoTempResources,
+                            attribute = map.dracoAttribute,
+                            stride = m_StreamStrides[map.stream],
+                            flip = map.convertSpace,
+                            componentStride = map.numComponents,
+                            mesh = m_Mesh,
+                            streamIndex = map.stream,
+                            offset = map.offset,
+                        };
+                        jobHandles[jobIndex] = job.Schedule(decodeVerticesJobHandle);
+                    }
                 }
                 else
                 {
-                    var job = new GetDracoDataJob()
+                    if (calculateBound)
                     {
-                        result = m_DracoDecodeResult,
-                        dracoTempResources = m_DracoTempResources,
-                        attribute = map.dracoAttribute,
-                        flip = map.convertSpace,
-                        componentStride = map.numComponents,
-                        mesh = m_Mesh,
-                        streamIndex = map.stream
-                    };
-                    jobHandles[jobIndex] = job.Schedule(decodeVerticesJobHandle);
+                        var job = new GetDracoDataBoundsJob()
+                        {
+                            result = m_DracoDecodeResult,
+                            dracoTempResources = m_DracoTempResources,
+                            attribute = map.dracoAttribute,
+                            flip = map.convertSpace,
+                            componentStride = map.numComponents,
+                            mesh = m_Mesh,
+                            streamIndex = map.stream,
+                            bounds = m_PositionMinMax,
+                        };
+                        jobHandles[jobIndex] = job.Schedule(decodeVerticesJobHandle);
+                    }
+                    else
+                    {
+                        var job = new GetDracoDataJob()
+                        {
+                            result = m_DracoDecodeResult,
+                            dracoTempResources = m_DracoTempResources,
+                            attribute = map.dracoAttribute,
+                            flip = map.convertSpace,
+                            componentStride = map.numComponents,
+                            mesh = m_Mesh,
+                            streamIndex = map.stream,
+                        };
+                        jobHandles[jobIndex] = job.Schedule(decodeVerticesJobHandle);
+                    }
                 }
 #if UNITY_EDITOR
                 if (sync) {
@@ -548,8 +596,20 @@ namespace Draco
             m_DracoTempResources.Dispose();
         }
 
+        public Bounds CreateBounds()
+        {
+            var bounds = new Bounds();
+            if (m_PositionMinMax.IsCreated)
+            {
+                bounds.SetMinMax(m_PositionMinMax[0], m_PositionMinMax[1]);
+                m_PositionMinMax.Dispose();
+            }
+
+            return bounds;
+        }
+
         public bool
-        PopulateMeshData()
+        PopulateMeshData(Bounds bounds)
         {
 
             Profiler.BeginSample("PopulateMeshData");
@@ -565,7 +625,15 @@ namespace Draco
             const MeshUpdateFlags flags = DracoMeshLoader.defaultMeshUpdateFlags;
 
             m_Mesh.subMeshCount = 1;
-            var submeshDescriptor = new SubMeshDescriptor(0, m_IndicesCount, m_IsPointCloud ? MeshTopology.Points : MeshTopology.Triangles) { firstVertex = 0, baseVertex = 0, vertexCount = m_Mesh.vertexCount };
+            var submeshDescriptor = new SubMeshDescriptor(
+                0,
+                m_IndicesCount,
+                m_IsPointCloud ? MeshTopology.Points : MeshTopology.Triangles
+                )
+            {
+                vertexCount = m_Mesh.vertexCount
+            };
+            submeshDescriptor.bounds = bounds;
             m_Mesh.SetSubMesh(0, submeshDescriptor, flags);
             Profiler.EndSample(); // CreateUnityMesh.CreateMesh
             Profiler.EndSample();
@@ -1035,6 +1103,54 @@ namespace Draco
         }
 
         [BurstCompile]
+        struct GetDracoDataBoundsJob : IJob
+        {
+
+            [ReadOnly]
+            public NativeArray<int> result;
+            [ReadOnly]
+            public NativeArray<IntPtr> dracoTempResources;
+
+            [ReadOnly]
+            [NativeDisableUnsafePtrRestriction]
+            public DracoAttribute* attribute;
+
+            [ReadOnly]
+            public bool flip;
+
+            [ReadOnly]
+            public int componentStride;
+
+            public Mesh.MeshData mesh;
+            [ReadOnly]
+            public int streamIndex;
+
+            public NativeArray<float3> bounds;
+
+            public void Execute()
+            {
+                if (result[0] < 0)
+                {
+                    return;
+                }
+                var dracoMesh = (DracoMesh*)dracoTempResources[k_MeshPtrIndex];
+                DracoData* data = null;
+                GetAttributeData(dracoMesh, attribute, &data, flip, componentStride);
+                var elementSize = DataTypeSize((DataType)data->dataType) * componentStride;
+                var dst = mesh.GetVertexData<byte>(streamIndex);
+                var dstPtr = dst.GetUnsafePtr();
+                for (var v = 0; v < dracoMesh->numVertices; v++)
+                {
+                    var value = *(float3*)((byte*)data->data + elementSize * v);
+                    bounds[0] = math.min(bounds[0], value);
+                    bounds[1] = math.max(bounds[1], value);
+                    *((float3*)(((byte*)dstPtr) + elementSize * v)) = value;
+                }
+                ReleaseDracoData(&data);
+            }
+        }
+
+        [BurstCompile]
         struct GetDracoDataInterleavedJob : IJob
         {
 
@@ -1079,6 +1195,62 @@ namespace Draco
                 for (var v = 0; v < dracoMesh->numVertices; v++)
                 {
                     UnsafeUtility.MemCpy(dstPtr + (stride * v), ((byte*)data->data) + (elementSize * v), elementSize);
+                }
+                ReleaseDracoData(&data);
+            }
+        }
+
+
+        [BurstCompile]
+        struct GetDracoDataInterleavedBoundsJob : IJob
+        {
+
+            [ReadOnly]
+            public NativeArray<int> result;
+            [ReadOnly]
+            public NativeArray<IntPtr> dracoTempResources;
+
+            [ReadOnly]
+            [NativeDisableUnsafePtrRestriction]
+            public DracoAttribute* attribute;
+
+            [ReadOnly]
+            public int stride;
+
+            [ReadOnly]
+            public bool flip;
+
+            [ReadOnly]
+            public int componentStride;
+
+            public Mesh.MeshData mesh;
+
+            [ReadOnly]
+            public int streamIndex;
+
+            [ReadOnly]
+            public int offset;
+
+            public NativeArray<float3> bounds;
+
+            public void Execute()
+            {
+                if (result[0] < 0)
+                {
+                    return;
+                }
+                var dracoMesh = (DracoMesh*)dracoTempResources[k_MeshPtrIndex];
+                DracoData* data = null;
+                GetAttributeData(dracoMesh, attribute, &data, flip, componentStride);
+                var elementSize = DataTypeSize((DataType)data->dataType) * componentStride;
+                var dst = mesh.GetVertexData<byte>(streamIndex);
+                var dstPtr = ((byte*)dst.GetUnsafePtr()) + offset;
+                for (var v = 0; v < dracoMesh->numVertices; v++)
+                {
+                    var value = *(float3*)((byte*)data->data + elementSize * v);
+                    bounds[0] = math.min(bounds[0], value);
+                    bounds[1] = math.max(bounds[1], value);
+                    *((float3*)(dstPtr + stride * v)) = value;
                 }
                 ReleaseDracoData(&data);
             }

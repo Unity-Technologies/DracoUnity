@@ -46,6 +46,11 @@ namespace Draco
             public bool success;
 
             /// <summary>
+            /// Axis aligned bounding box of the mesh/point cloud.
+            /// </summary>
+            public Bounds bounds;
+
+            /// <summary>
             /// True, if the normals were marked required, but not present in Draco mesh.
             /// They have to get calculated.
             /// </summary>
@@ -345,6 +350,7 @@ namespace Draco
             }
             var unityMesh = new Mesh();
             Mesh.ApplyAndDisposeWritableMeshData(meshDataArray, unityMesh, defaultMeshUpdateFlags);
+            unityMesh.bounds = result.bounds;
             if (result.calculateNormals)
             {
                 unityMesh.RecalculateNormals();
@@ -416,7 +422,8 @@ namespace Draco
                 return result;
             }
 
-            result.success = dracoNative.PopulateMeshData();
+            result.bounds = dracoNative.CreateBounds();
+            result.success = dracoNative.PopulateMeshData(result.bounds);
             if (result.success && dracoNative.hasBoneWeightData)
             {
                 result.boneWeightData = new BoneWeightData(dracoNative.bonesPerVertex, dracoNative.boneWeights);

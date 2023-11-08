@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic code formatting was applied to all source files
 - Consolidated split libraries into a single library named `draco_unity`
 - Updated Draco native library binaries to [3.0.0](https://github.com/Unity-Technologies/draco/releases/tag/unity%2F3.0.0)
+- Bumped Burst dependency to version 1.8.10
 
 ### Removed
 - Obsolete console error about downgrading package for certain Unity versions

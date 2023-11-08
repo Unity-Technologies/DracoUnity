@@ -13,8 +13,6 @@ Following build targets are supported
 - Linux (64 bit)
 - Lumin / Magic Leap
 
-> Note: Burst support is broken on iOS builds at the moment. Please deactivate Burst AOT in the project settings until this is resolved.
-
 ## Using
 
 ### Mesh result

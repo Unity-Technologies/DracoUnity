@@ -181,5 +181,22 @@ namespace Draco.Tests
 
             result[0].Dispose();
         }
+
+        [UnityTest]
+        public IEnumerator LoadGarbage()
+        {
+            var garbage = new byte[] { 71, 65, 82, 66, 65, 71, 69, 71, 65, 82, 66, 65, 71, 69, 71, 65, 82, 66, 65, 71, 69 };
+
+            var dracoLoader = new DracoMeshLoader();
+            var task = dracoLoader.ConvertDracoMeshToUnity(garbage);
+
+            while (!task.IsCompleted)
+            {
+                yield return null;
+            }
+
+            var result = task.Result;
+            UnityEngine.Assertions.Assert.IsNull(result);
+        }
     }
 }

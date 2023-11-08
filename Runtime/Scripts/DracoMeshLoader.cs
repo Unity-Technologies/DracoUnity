@@ -391,6 +391,7 @@ namespace Draco
             }
             if (dracoNative.ErrorOccured())
             {
+                dracoNative.DisposeDracoMesh();
                 return result;
             }
             if (!requireNormals && requireTangents)

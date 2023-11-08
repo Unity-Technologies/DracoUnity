@@ -158,7 +158,19 @@ See the signatures of all [`DracoMeshLoader.ConvertDracoMeshToUnity`][DracoMeshL
 
 The examples above and more can be found in the [DracoUnityDemo][DracoUnityDemo] project.
 
-### Troubleshooting - Missing code signing
+## Troubleshooting
+
+### Loading libraries on Windows
+
+If you run into an error message similar to this one:
+
+```log
+Failed to load 'draco_unity.dll' because one or more of its dependencies could not be loaded
+```
+
+The issue might get resolved by installing [Microsoft Visual C++ Redistributable packages for Visual Studio 2015, 2017, 2019, and 2022](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2015-2017-2019-and-2022).
+
+### Missing code signing
 
 The binary libraries used in this package are not code-signed. macOS in particular will not let you load the `ktx_unity.bundle` for that reason (see [issue](https://github.com/atteneder/DracoUnity/issues/4)).
 

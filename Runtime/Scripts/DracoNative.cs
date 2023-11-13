@@ -393,30 +393,46 @@ namespace Draco
             }
 #endif
 
-            var indicesJob = new GetDracoIndicesJob()
-            {
-                result = m_DracoDecodeResult,
-                dracoTempResources = m_DracoTempResources,
-                flip = m_ConvertSpace,
-                dataType = m_Mesh.indexFormat == IndexFormat.UInt16 ? DataType.UInt16 : DataType.UInt32,
-                mesh = m_Mesh
-            };
-            var jobCount = m_Attributes.Count + 1;
+            JobHandle indicesJob;
+            var dracoMeshJobCount = m_Attributes.Count;
 
-            if (hasBoneWeightData) jobCount++;
-
-            var jobHandles = new NativeArray<JobHandle>(jobCount, m_Allocator)
+            if (m_IsPointCloud)
             {
-                [0] = indicesJob.Schedule(decodeVerticesJobHandle)
-            };
+                indicesJob = new GeneratePointCloudIndicesJob
+                {
+                    mesh = m_Mesh
+                }.Schedule();
+            }
+            else
+            {
+                indicesJob = new GetDracoIndicesJob
+                {
+                    result = m_DracoDecodeResult,
+                    dracoTempResources = m_DracoTempResources,
+                    flip = m_ConvertSpace,
+                    dataType = m_Mesh.indexFormat == IndexFormat.UInt16 ? DataType.UInt16 : DataType.UInt32,
+                    mesh = m_Mesh
+                }.Schedule(decodeVerticesJobHandle);
+                dracoMeshJobCount++;
+            }
+
+            if (hasBoneWeightData) dracoMeshJobCount++;
+
+            var jobIndex = 0;
+            var jobHandles = new NativeArray<JobHandle>(dracoMeshJobCount, m_Allocator);
+
+            if (!m_IsPointCloud)
+            {
+                jobHandles[jobIndex] = indicesJob;
+                jobIndex++;
+            }
 
 #if UNITY_EDITOR
             if (sync) {
-                jobHandles[0].Complete();
+                indicesJob.Complete();
             }
 #endif
 
-            int jobIndex = 1;
             foreach (var mapBase in m_Attributes)
             {
                 var map = mapBase as AttributeMap;
@@ -540,6 +556,16 @@ namespace Draco
                 releaseDracoMeshJobHandle.Complete();
             }
 #endif
+            if (m_IsPointCloud)
+            {
+                var pointCloudJobHandles = new NativeArray<JobHandle>(2, m_Allocator);
+                pointCloudJobHandles[0] = indicesJob;
+                pointCloudJobHandles[1] = releaseDracoMeshJobHandle;
+                var pointCloudJobHandle = JobHandle.CombineDependencies(pointCloudJobHandles);
+                pointCloudJobHandles.Dispose();
+                return pointCloudJobHandle;
+            }
+
             return releaseDracoMeshJobHandle;
         }
 
@@ -569,9 +595,15 @@ namespace Draco
 
             Profiler.BeginSample("SetParameters");
             m_IsPointCloud = dracoMesh->isPointCloud;
-            m_IndicesCount = dracoMesh->numFaces * 3;
-            if (!m_IsPointCloud)
+
+            if (m_IsPointCloud)
             {
+                m_IndicesCount = dracoMesh->numVertices;
+                m_Mesh.SetIndexBufferParams(dracoMesh->numVertices, dracoMesh->indexFormat);
+            }
+            else
+            {
+                m_IndicesCount = dracoMesh->numFaces * 3;
                 m_Mesh.SetIndexBufferParams(dracoMesh->numFaces * 3, dracoMesh->indexFormat);
             }
             var vertexParams = new List<VertexAttributeDescriptor>(m_Attributes.Count);
@@ -631,9 +663,9 @@ namespace Draco
                 m_IsPointCloud ? MeshTopology.Points : MeshTopology.Triangles
                 )
             {
-                vertexCount = m_Mesh.vertexCount
+                vertexCount = m_Mesh.vertexCount,
+                bounds = bounds
             };
-            submeshDescriptor.bounds = bounds;
             m_Mesh.SetSubMesh(0, submeshDescriptor, flags);
             Profiler.EndSample(); // CreateUnityMesh.CreateMesh
             Profiler.EndSample();
@@ -1031,10 +1063,7 @@ namespace Draco
                     return;
                 }
                 var dracoMesh = (DracoMesh*)dracoTempResources[k_MeshPtrIndex];
-                if (dracoMesh->isPointCloud)
-                {
-                    return;
-                }
+                Assert.IsFalse(dracoMesh->isPointCloud);
                 void* indicesPtr;
                 int indicesLength;
 
@@ -1059,6 +1088,37 @@ namespace Draco
                         return;
                 }
                 GetMeshIndices(dracoMesh, dataType, indicesPtr, indicesLength, flip);
+            }
+        }
+
+        [BurstCompile]
+        struct GeneratePointCloudIndicesJob : IJob
+        {
+            public Mesh.MeshData mesh;
+
+            public void Execute()
+            {
+                switch (mesh.indexFormat)
+                {
+                    case IndexFormat.UInt16:
+                        {
+                            var indices = mesh.GetIndexData<ushort>();
+                            for (var i = 0; i < indices.Length; i++)
+                            {
+                                indices[i] = (ushort)i;
+                            }
+                            break;
+                        }
+                    case IndexFormat.UInt32:
+                        {
+                            var indices = mesh.GetIndexData<uint>();
+                            for (var i = 0; i < indices.Length; i++)
+                            {
+                                indices[i] = (uint)i;
+                            }
+                            break;
+                        }
+                }
             }
         }
 

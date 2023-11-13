@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reference assembly definitions in `DracoEncoder` by name instead of GUID to avoid package import errors.
 - Decoded mesh's bounds are calculated and returned/set accordingly.
 - Properly dispose NativeArrays in case of error (fixes atteneder/DracoUnity#53)
+- Point clouds' index buffer is properly initialized (fixes atteneder/DracoUnity#64)
 
 ## [4.1.0] - 2023-04-14
 

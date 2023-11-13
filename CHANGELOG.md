@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Consolidated split libraries into a single library named `draco_unity`
 - Updated Draco native library binaries to [3.0.0](https://github.com/Unity-Technologies/draco/releases/tag/unity%2F3.0.0)
 - Bumped Burst dependency to version 1.8.10
+- Renamed assembly definition `DracoEditor` to `Draco.Editor`
+- Renamed assembly definition `DracoRuntimeTests` to `Draco.Tests`
 
 ### Removed
 - Obsolete console error about downgrading package for certain Unity versions
@@ -35,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Decoded mesh's bounds are calculated and returned/set accordingly.
 - Properly dispose NativeArrays in case of error (fixes atteneder/DracoUnity#53)
 - Point clouds' index buffer is properly initialized (fixes atteneder/DracoUnity#64)
+- Properly set root namespace on all assembly definitions
 
 ## [4.1.0] - 2023-04-14
 

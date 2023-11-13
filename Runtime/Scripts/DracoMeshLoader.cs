@@ -10,7 +10,7 @@ using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-[assembly: InternalsVisibleTo("DracoEditor")]
+[assembly: InternalsVisibleTo("Draco.Editor")]
 
 namespace Draco
 {

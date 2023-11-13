@@ -1,11 +1,11 @@
 {
-    "name": "DracoRuntimeTests",
-    "rootNamespace": "",
+    "name": "Draco.Tests",
+    "rootNamespace": "Draco.Tests",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Draco",
-        "DracoEncoder"
+        "Draco.Encode"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

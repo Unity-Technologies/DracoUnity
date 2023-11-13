@@ -16,7 +16,7 @@ using UnityEngine.Assertions;
 using UnityEngine.Profiling;
 using UnityEngine.Rendering;
 
-[assembly: InternalsVisibleTo("DracoEncoder")]
+[assembly: InternalsVisibleTo("Draco.Encode")]
 
 namespace Draco
 {

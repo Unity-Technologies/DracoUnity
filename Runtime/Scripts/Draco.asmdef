@@ -1,6 +1,6 @@
 {
     "name": "Draco",
-    "rootNamespace": "",
+    "rootNamespace": "Draco",
     "references": [
         "Unity.Burst",
         "Unity.Mathematics"

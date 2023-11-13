@@ -168,7 +168,7 @@ namespace Draco.Tests
             mesh.SetSubMesh(0, new SubMeshDescriptor(0, 0, MeshTopology.Points));
             mesh.vertices = vertices;
 
-            var task = Encoder.DracoEncoder.EncodeMesh(mesh);
+            var task = Encode.DracoEncoder.EncodeMesh(mesh);
             while (!task.IsCompleted)
             {
                 yield return null;

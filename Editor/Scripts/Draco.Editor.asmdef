@@ -1,16 +1,18 @@
 {
-    "name": "DracoEncoder",
-    "rootNamespace": "",
+    "name": "Draco.Editor",
+    "rootNamespace": "Draco.Editor",
     "references": [
         "Draco",
-        "Unity.Mathematics"
+        "DracoEncoder"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
-    "allowUnsafeCode": true,
+    "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": false,
+    "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false

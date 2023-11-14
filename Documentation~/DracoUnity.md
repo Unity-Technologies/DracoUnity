@@ -6,7 +6,7 @@ Following build targets are supported
 
 - WebGL
 - iOS (device and simulator; arm64 and armv7a)
-- Android (x86, arm64 and armv7a)
+- Android (x86, x86_64, arm64 and armv7a)
 - Windows (x86 32-bit, x86 64-bit and ARM64)
 - Universal Windows Platform (x64,x86,ARM,ARM64)
 - macOS (Apple Silicon and Intel)

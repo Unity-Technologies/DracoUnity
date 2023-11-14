@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Vertex attributes information (draco identifier and dimensions) was added to `EncodeResult`
 - Support for iOS simulator
 - Support for Windows ARM64 architecture.
+- Support for Android x86_64
 
 ### Changed
 - Much faster encoding due to the use of the C# Job System (threads)

@@ -3,7 +3,6 @@
 
 using UnityEngine;
 
-
 namespace SubPackage
 {
     [System.Serializable]

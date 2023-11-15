@@ -4,8 +4,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
-
 using UnityEditor;
 using UnityEditor.PackageManager;
 using UnityEngine;
@@ -17,12 +17,11 @@ namespace SubPackage
 {
     static class SubPackageImporter
     {
-
 #if !DISABLE_SUB_PACKAGE_LOAD
         [InitializeOnLoadMethod]
 #endif
         [MenuItem("Help/Configure Draco Sub Packages")]
-        static async void ConfigureSubPackagesAsync()
+        static async Task ConfigureSubPackagesAsync()
         {
             try
             {
@@ -34,7 +33,7 @@ namespace SubPackage
 
                 if (subPackages.Count != 1 || subPackages[0].name != expectedPackage.name || subPackages[0].version != expectedPackage.version)
                 {
-                    EditorUtility.DisplayDialog(config.dialogTitle, config.dialogText, "Ok");
+                    DisplayDialog(config);
 
                     var packagesToRemove = subPackages
                         .Select(p => p.name)
@@ -70,7 +69,7 @@ namespace SubPackage
             var result = Client.Add(package);
 
             while (!result.IsCompleted)
-                await Task.Yield();
+                await Yield();
 
             if (result.Status != StatusCode.Success)
                 Debug.LogError(result.Error.message);
@@ -81,7 +80,7 @@ namespace SubPackage
             var result = Client.Remove(package);
 
             while (!result.IsCompleted)
-                await Task.Yield();
+                await Yield();
 
             if (result.Status != StatusCode.Success)
                 Debug.LogError(result.Error.message);
@@ -93,7 +92,7 @@ namespace SubPackage
             var result = Client.AddAndRemove(add, remove);
 
             while (!result.IsCompleted)
-                await Task.Yield();
+                await Yield();
 
             if (result.Status != StatusCode.Success)
                 Debug.LogError(result.Error.message);
@@ -105,7 +104,7 @@ namespace SubPackage
             var request = Client.List(offlineMode: true, includeIndirectDependencies: false);
 
             while (!request.IsCompleted)
-                await Task.Yield();
+                await Yield();
 
             Assert.AreEqual(StatusCode.Success, request.Status);
 
@@ -136,6 +135,22 @@ namespace SubPackage
             }
 
             throw new System.InvalidOperationException("Could not find a version of the binaries to match the current version of Unity");
+        }
+
+        static void DisplayDialog(SubPackageConfigSchema config)
+        {
+            if (Application.isBatchMode)
+                return;
+            
+            EditorUtility.DisplayDialog(config.dialogTitle, config.dialogText, "Ok");
+        }
+
+        static async Task Yield()
+        {
+            if (Application.isBatchMode)
+                Thread.Sleep(10);
+            else
+                await Task.Yield();
         }
     }
 }

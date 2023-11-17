@@ -4,15 +4,17 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Draco.Encoder;
+using Draco.Encode;
+using UnityEngine.Assertions;
 
 namespace Draco.Editor
 {
 
-    static class DracoEditorEncoder
+    static class ToolsMenu
     {
         const string k_CompressedMeshesDirName = "CompressedMeshes";
 
@@ -32,7 +34,7 @@ namespace Draco.Editor
                 m_SubmeshAssetPaths = new string[mesh.subMeshCount];
 
                 var filename = string.IsNullOrEmpty(mesh.name) ? "Mesh-submesh-0.drc" : $"{mesh.name}-submesh-{{0}}.drc.bytes";
-                for (int submesh = 0; submesh < mesh.subMeshCount; submesh++)
+                for (var submesh = 0; submesh < mesh.subMeshCount; submesh++)
                 {
                     submeshFilenames[submesh] = string.Format(filename, submesh);
                     m_SubmeshAssetPaths[submesh] = Path.Combine(directory, submeshFilenames[submesh]);
@@ -41,13 +43,15 @@ namespace Draco.Editor
 
             public int submeshCount => dracoAssets.Length;
 
-            public bool TryLoadDracoAssets()
+            public bool TryLoadDracoAssets(out TextAsset sampleAsset)
             {
+                sampleAsset = null;
                 var mesh = target.sharedMesh;
-                for (int submesh = 0; submesh < mesh.subMeshCount; submesh++)
+                for (var submesh = 0; submesh < mesh.subMeshCount; submesh++)
                 {
                     if (dracoAssets[submesh] != null) continue;
-                    dracoAssets[submesh] = AssetDatabase.LoadAssetAtPath<TextAsset>(m_SubmeshAssetPaths[submesh]);
+                    sampleAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(m_SubmeshAssetPaths[submesh]);
+                    dracoAssets[submesh] = sampleAsset;
                     if (dracoAssets[submesh] == null)
                     {
                         return false;
@@ -58,48 +62,91 @@ namespace Draco.Editor
 
             public string GetSubmeshAssetPath(int submeshIndex)
             {
-                var projectPath = Directory.GetParent(Application.dataPath);
-                if (projectPath == null)
-                    return null;
-                return Path.Combine(projectPath.FullName, m_SubmeshAssetPaths[submeshIndex]);
+                return m_SubmeshAssetPaths[submeshIndex];
             }
+        }
+
+        [MenuItem("Tools/Draco/Encode Selected GameObject", true)]
+        static bool EncodeSelectedGameObjectMenuValidate()
+        {
+            if (Selection.activeObject != null && Selection.activeObject is GameObject)
+            {
+                var meshFilters = GetAllMeshFilters(Selection.activeObject as GameObject);
+                return meshFilters != null && meshFilters.Length > 0;
+            }
+
+            return false;
         }
 
         [MenuItem("Tools/Draco/Encode Selected GameObject")]
-        static void Compress()
+        static async void EncodeSelectedGameObjectMenu()
         {
-
-            var original = (GameObject)Selection.activeObject;
-            if (original == null)
-            {
-                Debug.Log("No GameObject selected");
-                return;
-            }
-
-            var root = Object.Instantiate(original);
-            var meshFilters = root.GetComponentsInChildren<MeshFilter>();
-
+            var root = (GameObject)Selection.activeObject;
+            var meshFilters = GetAllMeshFilters(root);
             if (meshFilters.Length < 1)
             {
                 Debug.Log("No GameObject with MeshFilter in selection");
-                Object.DestroyImmediate(root);
                 return;
             }
 
-            CompressMeshFilters(meshFilters);
+            await CompressMeshFilters(meshFilters);
+        }
 
-            Object.DestroyImmediate(root);
+        [MenuItem("Tools/Draco/Encode Active Scene", true)]
+        static bool EncodeActiveSceneMenuValidate()
+        {
+            var scene = SceneManager.GetActiveScene();
+            var meshFilters = GetAllMeshFilters(scene);
+            return meshFilters != null && meshFilters.Count > 0;
         }
 
         [MenuItem("Tools/Draco/Encode Active Scene")]
-        static void CompressSceneMenu()
+        static async void EncodeActiveSceneMenu()
         {
-            CompressScene(SceneManager.GetActiveScene());
+            await CompressScene(SceneManager.GetActiveScene());
         }
 
-        static void CompressScene(Scene scene)
+        [MenuItem("Tools/Draco/Setup Draco Decoder for Active Scene", true)]
+        static bool SetupDracoDecoderForSceneMenuValidate()
         {
+            return EncodeActiveSceneMenuValidate();
+        }
 
+        [MenuItem("Tools/Draco/Setup Draco Decoder for Active Scene", false, priority: 1100)]
+        static async void SetupDracoDecoderForSceneMenu()
+        {
+            if (EditorUtility.DisplayDialog(
+                    "Setup Draco Decoder",
+                    "Please backup the active scene before proceeding! All meshes will be removed from the scene, encoded to Draco assets and a Draco Mesh Decoder GameObject will be setup that decodes and restores the meshes at runtime.",
+                    "Proceed",
+                    "Cancel"))
+            {
+                await CompressScene(SceneManager.GetActiveScene(), true);
+            }
+        }
+
+        static List<MeshFilter> GetAllMeshFilters(Scene scene)
+        {
+            var objects = scene.GetRootGameObjects();
+            var meshFilters = new List<MeshFilter>();
+            if (objects != null && objects.Length > 0)
+            {
+                foreach (var gameObject in objects)
+                {
+                    meshFilters.AddRange(gameObject.GetComponentsInChildren<MeshFilter>());
+                }
+            }
+
+            return meshFilters;
+        }
+
+        static MeshFilter[] GetAllMeshFilters(GameObject gameObject)
+        {
+            return gameObject.GetComponentsInChildren<MeshFilter>();
+        }
+
+        static async Task CompressScene(Scene scene, bool setupMeshDecoder = false)
+        {
             var scenePath = scene.path;
             var sceneDir = scenePath.Substring(0, scenePath.Length - 6);
 
@@ -114,23 +161,17 @@ namespace Draco.Editor
                 Directory.CreateDirectory(sceneDir);
             }
 
-            var objects = scene.GetRootGameObjects();
-
-            var meshFilters = new List<MeshFilter>();
-            foreach (var gameObject in objects)
-            {
-                meshFilters.AddRange(gameObject.GetComponentsInChildren<MeshFilter>());
-            }
-            CompressMeshFilters(meshFilters.ToArray(), sceneDir);
+            var meshFilters = GetAllMeshFilters(scene);
+            await CompressMeshFilters(meshFilters.ToArray(), sceneDir, setupMeshDecoder);
         }
 
-        static void CompressMeshFilters(MeshFilter[] meshFilters, string directory = null)
+        static async Task CompressMeshFilters(IEnumerable<MeshFilter> meshFilters, string directory = null, bool setupMeshDecoder = false)
         {
 
             var instances = new Dictionary<TextAsset, DracoDecodeInstance>();
 
             var meshDecoder = Object.FindObjectOfType<DracoDecoder>();
-            if (meshDecoder == null)
+            if (meshDecoder == null && setupMeshDecoder)
             {
                 meshDecoder = new GameObject("MeshDecoder").AddComponent<DracoDecoder>();
             }
@@ -156,29 +197,40 @@ namespace Draco.Editor
                 }
 #endif
                 var dracoMesh = new DracoMesh(meshFilter, directory);
-                var dracoFilesMissing = !dracoMesh.TryLoadDracoAssets();
+                var dracoFilesMissing = !dracoMesh.TryLoadDracoAssets(out var sampleAsset);
 
                 if (dracoFilesMissing)
                 {
                     var scale = meshFilter.transform.localToWorldMatrix.lossyScale;
-                    var dracoData = AsyncHelpers.RunSync(() => DracoEncoder.EncodeMesh(mesh, scale, .0001f));
+                    var dracoData = await DracoEncoder.EncodeMesh(mesh, scale, .0001f);
                     if (dracoData != null && dracoData.Length > 0)
                     {
+                        var projectPath = Directory.GetParent(Application.dataPath);
+                        Assert.IsNotNull(projectPath);
                         for (var submesh = 0; submesh < dracoData.Length; submesh++)
                         {
                             if (submesh > 0) Debug.LogWarning("more than one submesh. not supported yet.");
-                            File.WriteAllBytes(dracoMesh.GetSubmeshAssetPath(submesh), dracoData[submesh].data.ToArray());
+                            var subPath = dracoMesh.GetSubmeshAssetPath(submesh);
+                            File.WriteAllBytes(
+                                Path.Combine(projectPath.FullName, subPath),
+                                dracoData[submesh].data.ToArray()
+                                );
                             dracoData[submesh].Dispose();
                             dracoFilesUpdated = true;
                             AssetDatabase.SaveAssets();
                             AssetDatabase.Refresh();
+                            Debug.Log($"`{meshFilter.name}` was encoded to {subPath}.", AssetDatabase.LoadAssetAtPath<TextAsset>(subPath));
                         }
                     }
                     else
                     {
-                        Debug.LogError("Draco encoding failed");
+                        Debug.LogError($"Encoding `{meshFilter.name}` failed", meshFilter);
                         return;
                     }
+                }
+                else
+                {
+                    Debug.Log($"Skipping `{meshFilter.name}`. Draco file(s) have been encoded before (e.g. at {dracoMesh.GetSubmeshAssetPath(0)}.", sampleAsset);
                 }
 
                 dracoMeshes.Add(dracoMesh);
@@ -189,7 +241,7 @@ namespace Draco.Editor
 
                 foreach (var dracoMesh in dracoMeshes)
                 {
-                    if (!dracoMesh.TryLoadDracoAssets())
+                    if (!dracoMesh.TryLoadDracoAssets(out _))
                     {
                         Debug.LogError("Loading draco assets failed");
                         return;
@@ -199,9 +251,8 @@ namespace Draco.Editor
 
             foreach (var dracoMesh in dracoMeshes)
             {
-                for (int submesh = 0; submesh < dracoMesh.submeshCount; submesh++)
+                for (var submesh = 0; submesh < dracoMesh.submeshCount; submesh++)
                 {
-                    // meshDecoder.AddTarget(dracoMesh.target,dracoMesh.dracoAssets[submesh]);
                     var dracoAsset = dracoMesh.dracoAssets[submesh];
                     if (instances.TryGetValue(dracoAsset, out var instance))
                     {
@@ -216,34 +267,42 @@ namespace Draco.Editor
                         instances[dracoAsset] = newInstance;
                     }
                 }
-                dracoMesh.target.mesh = null;
+
+                if (setupMeshDecoder)
+                {
+                    dracoMesh.target.mesh = null;
+                }
             }
 
-            meshDecoder.instances = instances.Values.ToArray();
+            if (setupMeshDecoder)
+            {
+                meshDecoder.instances = instances.Values.ToArray();
+            }
         }
 
-        [MenuItem("Tools/Draco/Encode Selected Mesh")]
-        static void EncodeSelectedMeshes()
+        [MenuItem("Tools/Draco/Encode Selected Meshes", true)]
+        static bool EncodeSelectedMeshesValidate()
         {
             var meshes = Selection.GetFiltered<Mesh>(SelectionMode.Deep);
-            if (meshes == null || meshes.Length <= 0)
-            {
-                Debug.Log("No mesh selected");
-                return;
-            }
+            return meshes != null && meshes.Length > 0;
+        }
 
+        [MenuItem("Tools/Draco/Encode Selected Meshes", false)]
+        static async void EncodeSelectedMeshes()
+        {
+            var meshes = Selection.GetFiltered<Mesh>(SelectionMode.Deep);
             var directory = EditorUtility.OpenFolderPanel("Save Draco files to folder", "", "");
             if (string.IsNullOrEmpty(directory)) return;
 
             foreach (var mesh in meshes)
             {
-                EncodeMesh(mesh, directory);
+                await EncodeMesh(mesh, directory);
             }
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
         }
 
-        static void EncodeMesh(Mesh mesh, string directory)
+        static async Task EncodeMesh(Mesh mesh, string directory)
         {
             Debug.Log($"Encode mesh {mesh.name} to {directory}");
 #if !UNITY_EDITOR
@@ -253,7 +312,7 @@ namespace Draco.Editor
                 return;
             }
 #endif
-            var dracoData = AsyncHelpers.RunSync(() => DracoEncoder.EncodeMesh(mesh));
+            var dracoData = await DracoEncoder.EncodeMesh(mesh);
             if (dracoData.Length > 1)
             {
                 var filename = string.IsNullOrEmpty(mesh.name) ? "Mesh-submesh-{0}.drc.bytes" : $"{mesh.name}-submesh-{{0}}.drc.bytes";

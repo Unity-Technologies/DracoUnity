@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for iOS simulator
 - Support for Windows ARM64 architecture.
 - Support for Android x86_64
+- Package sample *Draco Tools Menu*. Demonstrates how to encode GameObjects, Meshes or entire Scenes via *Tools* menu.
 
 ### Changed
 - Much faster encoding due to the use of the C# Job System (threads)
@@ -31,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Obsolete console error about downgrading package for certain Unity versions
+- Menu items under `Tools` -> `Draco`. They can be brought back by installing the *Draco Tools Menu* package sample.
 
 ### Fixed
 - Destroying temporary copy (instead of original) GameObject when encoding selected GameObject from the menu

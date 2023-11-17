@@ -18,5 +18,12 @@
     "google",
     "draco"
   ],
-  "type": "library"
+  "type": "library",
+  "samples": [
+    {
+      "displayName": "Draco Tools Menu",
+      "description": "Encode GameObjects, Meshes or entire Scenes via the tools menu.",
+      "path": "Samples~/ToolsMenu"
+    }
+  ]
 }

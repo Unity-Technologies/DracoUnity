@@ -12,8 +12,8 @@ namespace Draco
     /// Lets you assigns Draco data (in form of a <see cref="TextAsset"/>) to one or more
     /// <see cref="MeshFilter"/> targets and decode them at runtime.
     /// </summary>
-    /// <seealso cref="DracoDecoder"/>
-    public class DracoDecodeInstance : ScriptableObject
+    /// <seealso cref="DracoSceneLoader"/>
+    public class DecodeInstance : ScriptableObject
     {
 
         [SerializeField]
@@ -31,8 +31,7 @@ namespace Draco
         /// <returns>A <see cref="Task"/></returns>
         public async Task Decode()
         {
-            var draco = new DracoMeshLoader(false);
-            var mesh = await draco.ConvertDracoMeshToUnity(dracoAsset.bytes);
+            var mesh = await DracoDecoder.DecodeMesh(dracoAsset.bytes, false);
             mesh.bounds = bounds;
 #if DEBUG
             mesh.name = dracoAsset.name;

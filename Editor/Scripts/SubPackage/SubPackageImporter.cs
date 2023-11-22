@@ -141,7 +141,7 @@ namespace SubPackage
         {
             if (Application.isBatchMode)
                 return;
-            
+
             EditorUtility.DisplayDialog(config.dialogTitle, config.dialogText, "Ok");
         }
 

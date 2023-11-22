@@ -23,8 +23,7 @@ namespace Draco.Editor
 #else
             var dracoData = File.ReadAllBytes(ctx.assetPath);
 #endif
-            var draco = new DracoMeshLoader();
-            var mesh = await draco.ConvertDracoMeshToUnitySync(dracoData);
+            var mesh = await DracoDecoder.DecodeMeshInternal(dracoData, sync: true);
             if (mesh == null)
             {
                 Debug.LogError("Import draco file failed");

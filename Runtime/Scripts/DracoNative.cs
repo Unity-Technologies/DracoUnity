@@ -654,7 +654,7 @@ namespace Draco
 
             Profiler.BeginSample("MeshAssign");
 
-            const MeshUpdateFlags flags = DracoMeshLoader.defaultMeshUpdateFlags;
+            const MeshUpdateFlags flags = DracoDecoder.defaultMeshUpdateFlags;
 
             m_Mesh.subMeshCount = 1;
             var submeshDescriptor = new SubMeshDescriptor(

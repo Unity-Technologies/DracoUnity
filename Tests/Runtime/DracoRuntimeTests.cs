@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2023 Unity Technologies and the Draco for Unity authors
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -14,13 +15,13 @@ using UnityEngine.TestTools;
 namespace Draco.Tests
 {
 
-    public class DracoRuntimeTests
+    [TestFixture]
+    class DracoRuntimeTests
     {
 
         const string k_URLPrefix = "https://raw.githubusercontent.com/google/draco/master/testdata/";
 
-        [UnityTest]
-        [UseDracoTestFileCase(new[] {
+        static readonly string[] k_TestDataUrls = {
             "bunny_gltf.drc",
             "car.drc",
             "cube_att.obj.edgebreaker.cl10.2.2.drc",
@@ -50,80 +51,196 @@ namespace Draco.Tests
 
             // // Unknown why it does not work
             // "cube_att.drc",
-        })]
-        public IEnumerator LoadDracoOfficialTestData(string url)
-        {
-            yield return RunTest(k_URLPrefix + url);
-        }
+        };
 
-        [UnityTest]
-        [UseDracoTestFileCase(new[] {
-            "bunny_gltf.drc",
-            "car.drc",
-            "cube_att.obj.edgebreaker.cl10.2.2.drc",
-            "cube_att.obj.edgebreaker.cl4.2.2.drc",
-            "cube_att.obj.sequential.cl3.2.2.drc",
-            "cube_att_sub_o_2.drc",
-            "cube_att_sub_o_no_metadata.drc",
-            "octagon_preserved.drc",
-            "test_nm.obj.edgebreaker.cl10.2.2.drc",
-            "test_nm.obj.edgebreaker.cl4.2.2.drc",
-            "test_nm.obj.sequential.cl3.2.2.drc",
-        })]
-        public IEnumerator LoadDracoOfficialTestDataNormals(string url)
-        {
-            yield return RunTest(k_URLPrefix + url, true);
-        }
+        static Dictionary<string, NativeArray<byte>> s_TestData;
 
-        [UnityTest]
-        [UseDracoTestFileCase(new[] {
-            "bunny_gltf.drc",
-            "car.drc",
-            "cube_att.obj.edgebreaker.cl10.2.2.drc",
-            "cube_att.obj.edgebreaker.cl4.2.2.drc",
-            "cube_att.obj.sequential.cl3.2.2.drc",
-            "cube_att_sub_o_2.drc",
-            "cube_att_sub_o_no_metadata.drc",
-            "octagon_preserved.drc",
-            "test_nm.obj.edgebreaker.cl10.2.2.drc",
-            "test_nm.obj.edgebreaker.cl4.2.2.drc",
-            "test_nm.obj.sequential.cl3.2.2.drc",
-        })]
-        public IEnumerator LoadDracoOfficialTestDataNormalsTangents(string url)
+        [UnitySetUp]
+        public IEnumerator OneTimeSetup()
         {
-            yield return RunTest(k_URLPrefix + url, true, true);
-        }
-
-        IEnumerator RunTest(string url, bool requireNormals = false, bool requireTangents = false)
-        {
-            var webRequest = UnityWebRequest.Get(url);
-            yield return webRequest.SendWebRequest();
-            if (!string.IsNullOrEmpty(webRequest.error))
+            if (s_TestData == null)
             {
-                Debug.LogErrorFormat("Error loading {0}: {1}", url, webRequest.error);
-                yield break;
+                var task = LoadAllUrls();
+                while (!task.IsCompleted)
+                {
+                    yield return null;
+                }
             }
+        }
 
-            var data = new NativeArray<byte>(webRequest.downloadHandler.data, Allocator.Persistent);
+        static async Task LoadAllUrls()
+        {
+            s_TestData = new Dictionary<string, NativeArray<byte>>(k_TestDataUrls.Length);
 
-            var task = LoadBatch(1, data, requireNormals, requireTangents);
+            foreach (var url in k_TestDataUrls)
+            {
+                var webRequest = UnityWebRequest.Get(k_URLPrefix + url);
+                var x = webRequest.SendWebRequest();
+                while (!x.isDone)
+                {
+                    await Task.Yield();
+                }
+                if (!string.IsNullOrEmpty(webRequest.error))
+                {
+                    Debug.LogErrorFormat("Error loading {0}: {1}", url, webRequest.error);
+                    return;
+                }
+
+                s_TestData[url] = new NativeArray<byte>(webRequest.downloadHandler.data, Allocator.Persistent);
+            }
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            foreach (var set in s_TestData)
+            {
+                set.Value.Dispose();
+            }
+        }
+
+        [UnityTest]
+        [UseDracoTestFileCase(new[] {
+            "bunny_gltf.drc",
+            "car.drc",
+            "cube_att.obj.edgebreaker.cl10.2.2.drc",
+            "cube_att.obj.edgebreaker.cl4.2.2.drc",
+            "cube_att.obj.sequential.cl3.2.2.drc",
+            "cube_att_sub_o_2.drc",
+            "cube_att_sub_o_no_metadata.drc",
+            "octagon_preserved.drc",
+            "pc_kd_color.drc",
+            "point_cloud_no_qp.drc",
+            "test_nm.obj.edgebreaker.cl10.2.2.drc",
+            "test_nm.obj.edgebreaker.cl4.2.2.drc",
+            "test_nm.obj.sequential.cl3.2.2.drc",
+        })]
+        public IEnumerator DecodeMesh(string url)
+        {
+            yield return RunTest(url, LoadBatchToMesh);
+        }
+
+        [UnityTest]
+        [UseDracoTestFileCase(new[] {
+            "bunny_gltf.drc",
+            "car.drc",
+            "cube_att.obj.edgebreaker.cl10.2.2.drc",
+            "cube_att.obj.edgebreaker.cl4.2.2.drc",
+            "cube_att.obj.sequential.cl3.2.2.drc",
+            "cube_att_sub_o_2.drc",
+            "cube_att_sub_o_no_metadata.drc",
+            "octagon_preserved.drc",
+            "pc_kd_color.drc",
+            "point_cloud_no_qp.drc",
+            "test_nm.obj.edgebreaker.cl10.2.2.drc",
+            "test_nm.obj.edgebreaker.cl4.2.2.drc",
+            "test_nm.obj.sequential.cl3.2.2.drc",
+        })]
+        public IEnumerator Decode(string url)
+        {
+            yield return RunTest(url, LoadBatchToMeshData);
+        }
+
+        [UnityTest]
+        [UseDracoTestFileCase(new[] {
+            "bunny_gltf.drc",
+            "car.drc",
+            "cube_att.obj.edgebreaker.cl10.2.2.drc",
+            "cube_att.obj.edgebreaker.cl4.2.2.drc",
+            "cube_att.obj.sequential.cl3.2.2.drc",
+            "cube_att_sub_o_2.drc",
+            "cube_att_sub_o_no_metadata.drc",
+            "octagon_preserved.drc",
+            "test_nm.obj.edgebreaker.cl10.2.2.drc",
+            "test_nm.obj.edgebreaker.cl4.2.2.drc",
+            "test_nm.obj.sequential.cl3.2.2.drc",
+        })]
+        public IEnumerator DecodeNormals(string url)
+        {
+            yield return RunTest(url, LoadBatchToMeshData, true);
+        }
+
+        [UnityTest]
+        [UseDracoTestFileCase(new[] {
+            "bunny_gltf.drc",
+            "car.drc",
+            "cube_att.obj.edgebreaker.cl10.2.2.drc",
+            "cube_att.obj.edgebreaker.cl4.2.2.drc",
+            "cube_att.obj.sequential.cl3.2.2.drc",
+            "cube_att_sub_o_2.drc",
+            "cube_att_sub_o_no_metadata.drc",
+            "octagon_preserved.drc",
+            "test_nm.obj.edgebreaker.cl10.2.2.drc",
+            "test_nm.obj.edgebreaker.cl4.2.2.drc",
+            "test_nm.obj.sequential.cl3.2.2.drc",
+        })]
+        public IEnumerator DecodeNormalsTangents(string url)
+        {
+            yield return RunTest(url, LoadBatchToMeshData, true, true);
+        }
+
+        static IEnumerator RunTest(string url, Func<int, NativeArray<byte>, bool, bool, Task> loadBatchFunc, bool requireNormals = false, bool requireTangents = false)
+        {
+            var data = s_TestData[url];
+            var task = loadBatchFunc(1, data, requireNormals, requireTangents);
             while (!task.IsCompleted)
             {
                 yield return null;
             }
             Assert.IsNull(task.Exception);
-            data.Dispose();
         }
 
-        async Task LoadBatch(int quantity, NativeArray<byte> data, bool requireNormals = false, bool requireTangents = false)
+        static async Task LoadBatchToMeshData(int quantity, NativeArray<byte> data, bool requireNormals = false, bool requireTangents = false)
         {
 
+            var tasks = new List<Task<DecodeResult>>(quantity);
+            var meshDataArray = Mesh.AllocateWritableMeshData(quantity);
+
+            for (var i = 0; i < quantity; i++)
+            {
+                var task = DracoDecoder.DecodeMesh(meshDataArray[i], data, requireNormals: requireNormals, requireTangents: requireTangents);
+                tasks.Add(task);
+            }
+
+            while (tasks.Count > 0)
+            {
+                var task = await Task.WhenAny(tasks);
+                tasks.Remove(task);
+                var result = await task;
+                if (!result.success)
+                {
+                    Debug.LogError("Loading mesh failed");
+                    return;
+                }
+            }
+
+            var meshes = CreateMeshes(quantity);
+            Mesh.ApplyAndDisposeWritableMeshData(meshDataArray, meshes, DracoDecoder.defaultMeshUpdateFlags);
+
+            for (var i = 0; i < quantity; i++)
+            {
+                if (requireNormals)
+                {
+                    var normals = meshes[i].normals;
+                    Assert.Greater(normals.Length, 0);
+                }
+                if (requireTangents)
+                {
+                    var tangents = meshes[i].tangents;
+                    Assert.Greater(tangents.Length, 0);
+                }
+            }
+
+            await Task.Yield();
+        }
+
+        static async Task LoadBatchToMesh(int quantity, NativeArray<byte> data, bool requireNormals = false, bool requireTangents = false)
+        {
             var tasks = new List<Task<Mesh>>(quantity);
 
             for (var i = 0; i < quantity; i++)
             {
-                DracoMeshLoader dracoLoader = new DracoMeshLoader();
-                var task = dracoLoader.ConvertDracoMeshToUnity(data, requireNormals, requireTangents);
+                var task = DracoDecoder.DecodeMesh(data, requireNormals: requireNormals, requireTangents: requireTangents);
                 tasks.Add(task);
             }
 
@@ -187,8 +304,7 @@ namespace Draco.Tests
         {
             var garbage = new byte[] { 71, 65, 82, 66, 65, 71, 69, 71, 65, 82, 66, 65, 71, 69, 71, 65, 82, 66, 65, 71, 69 };
 
-            var dracoLoader = new DracoMeshLoader();
-            var task = dracoLoader.ConvertDracoMeshToUnity(garbage);
+            var task = DracoDecoder.DecodeMesh(garbage);
 
             while (!task.IsCompleted)
             {
@@ -197,6 +313,16 @@ namespace Draco.Tests
 
             var result = task.Result;
             UnityEngine.Assertions.Assert.IsNull(result);
+        }
+
+        static Mesh[] CreateMeshes(int quantity)
+        {
+            var meshes = new Mesh[quantity];
+            for (var index = 0; index < meshes.Length; index++)
+            {
+                meshes[index] = new Mesh();
+            }
+            return meshes;
         }
     }
 }

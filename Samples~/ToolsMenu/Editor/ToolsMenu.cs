@@ -168,12 +168,12 @@ namespace Draco.Editor
         static async Task CompressMeshFilters(IEnumerable<MeshFilter> meshFilters, string directory = null, bool setupMeshDecoder = false)
         {
 
-            var instances = new Dictionary<TextAsset, DracoDecodeInstance>();
+            var instances = new Dictionary<TextAsset, DecodeInstance>();
 
-            var meshDecoder = Object.FindObjectOfType<DracoDecoder>();
+            var meshDecoder = Object.FindObjectOfType<DracoSceneLoader>();
             if (meshDecoder == null && setupMeshDecoder)
             {
-                meshDecoder = new GameObject("MeshDecoder").AddComponent<DracoDecoder>();
+                meshDecoder = new GameObject("MeshDecoder").AddComponent<DracoSceneLoader>();
             }
 
             directory = directory ?? $"Assets/{k_CompressedMeshesDirName}";
@@ -260,7 +260,7 @@ namespace Draco.Editor
                     }
                     else
                     {
-                        var newInstance = ScriptableObject.CreateInstance<DracoDecodeInstance>();
+                        var newInstance = ScriptableObject.CreateInstance<DecodeInstance>();
                         var bounds = dracoMesh.target.sharedMesh.bounds;
                         newInstance.SetAsset(dracoAsset, bounds);
                         newInstance.AddTarget(dracoMesh.target);

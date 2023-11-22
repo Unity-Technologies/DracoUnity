@@ -115,7 +115,7 @@ namespace Draco.Encode
         /// <summary>
         /// Applies Draco compression to a given mesh/meshData and returns the encoded result (one per submesh)
         /// The user is responsible for
-        /// <see cref="UnityEngine.Mesh.AcquireReadOnlyMeshData(List&lt;Mesh&gt;)">acquiring the readable MeshData</see>
+        /// <see cref="UnityEngine.Mesh.AcquireReadOnlyMeshData(Mesh)">acquiring the readable MeshData</see>
         /// and disposing it.
         /// The quality and quantization parameters are calculated from the mesh's bounds, its worldScale and desired precision.
         /// The quantization parameters help to find a balance between compressed size and quality / precision.
@@ -203,7 +203,7 @@ namespace Draco.Encode
         /// <summary>
         /// Applies Draco compression to a given mesh/meshData and returns the encoded result (one per submesh)
         /// The user is responsible for
-        /// <see cref="UnityEngine.Mesh.AcquireReadOnlyMeshData(List&lt;Mesh&gt;)">acquiring the readable MeshData</see>
+        /// <see cref="UnityEngine.Mesh.AcquireReadOnlyMeshData(Mesh)">acquiring the readable MeshData</see>
         /// and disposing it.
         /// The quantization parameters help to find a balance between encoded size and quality / precision.
         /// </summary>

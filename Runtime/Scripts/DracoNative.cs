@@ -82,6 +82,9 @@ namespace Draco
         internal const string dracoUnityLib = "__Internal";
 #elif UNITY_ANDROID || UNITY_STANDALONE || UNITY_WSA || UNITY_EDITOR || PLATFORM_LUMIN
         internal const string dracoUnityLib = "draco_unity";
+#else
+        // Unsupported platform
+        internal const string dracoUnityLib = "invalid";
 #endif
 
         public const int maxStreamCount = 4;

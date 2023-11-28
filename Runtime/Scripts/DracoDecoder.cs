@@ -1,7 +1,14 @@
 // SPDX-FileCopyrightText: 2023 Unity Technologies and the Draco for Unity authors
 // SPDX-License-Identifier: Apache-2.0
 
+#if UNITY_STANDALONE || UNITY_WEBGL || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_LUMIN
+#define DRACO_PLATFORM_SUPPORTED
+#else
+#define DRACO_PLATFORM_NOT_SUPPORTED
+#endif
+
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Unity.Collections;
@@ -50,6 +57,11 @@ namespace Draco
             bool forceUnityLayout = false
         )
         {
+            CertifySupportedPlatform(
+#if UNITY_EDITOR
+                false
+#endif
+            );
             var encodedDataPtr = GetUnsafeReadOnlyIntPtr(encodedData);
             var result = await DecodeMesh(
                 mesh,
@@ -77,6 +89,11 @@ namespace Draco
             bool forceUnityLayout = false
             )
         {
+            CertifySupportedPlatform(
+#if UNITY_EDITOR
+                false
+#endif
+            );
             var encodedDataPtr = PinGCArrayAndGetDataAddress(encodedData, out var gcHandle);
             var result = await DecodeMesh(
                 mesh,
@@ -116,6 +133,11 @@ namespace Draco
             bool forceUnityLayout = false
             )
         {
+            CertifySupportedPlatform(
+#if UNITY_EDITOR
+                false
+#endif
+            );
             var encodedDataPtr = GetUnsafeReadOnlyIntPtr(encodedData);
             var meshDataArray = Mesh.AllocateWritableMeshData(1);
             var mesh = meshDataArray[0];
@@ -168,6 +190,11 @@ namespace Draco
             bool forceUnityLayout = false
         )
         {
+            CertifySupportedPlatform(
+#if UNITY_EDITOR
+                false
+#endif
+            );
             return await DecodeMeshInternal(
                 encodedData,
                 convertSpace,
@@ -317,6 +344,30 @@ namespace Draco
         static unsafe IntPtr PinGCArrayAndGetDataAddress(byte[] encodedData, out ulong gcHandle)
         {
             return (IntPtr)UnsafeUtility.PinGCArrayAndGetDataAddress(encodedData, out gcHandle);
+        }
+        
+#if !UNITY_EDITOR
+        [Conditional("DRACO_PLATFORM_NOT_SUPPORTED")]
+#endif
+        internal static void CertifySupportedPlatform(
+#if UNITY_EDITOR
+            bool editorImport
+#endif
+        )
+        {
+#if DRACO_PLATFORM_NOT_SUPPORTED
+#if UNITY_EDITOR
+#if !DRACO_IGNORE_PLATFORM_NOT_SUPPORTED
+            if (!editorImport)
+            {
+                throw new NotSupportedException("Draco for Unity is not supported on the active build target. This will not work in a build, please switch to a supported platform in the build settings. You can bypass this exception in the Editor by setting the scripting define `DRACO_IGNORE_PLATFORM_NOT_SUPPORTED`.");
+            }
+#endif // !DRACO_IGNORE_PLATFORM_NOT_SUPPORTED
+#else
+            // In a build, always throw the exception.
+            throw new NotSupportedException("Draco for Unity is not supported on this platform.");
+#endif
+#endif // DRACO_PLATFORM_NOT_SUPPORTED
         }
     }
 }

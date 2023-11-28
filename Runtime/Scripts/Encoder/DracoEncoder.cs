@@ -1,6 +1,10 @@
 // SPDX-FileCopyrightText: 2023 Unity Technologies and the Draco for Unity authors
 // SPDX-License-Identifier: Apache-2.0
 
+#if UNITY_STANDALONE || UNITY_WEBGL || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_LUMIN
+#define DRACO_PLATFORM_SUPPORTED
+#endif
+
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -181,6 +185,11 @@ namespace Draco.Encode
             int genericQuantization = 12
         )
         {
+            DracoDecoder.CertifySupportedPlatform(
+#if UNITY_EDITOR
+                false
+#endif
+            );
             var dataArray = Mesh.AcquireReadOnlyMeshData(unityMesh);
             var data = dataArray[0];
 

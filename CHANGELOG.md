@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Properly dispose NativeArrays in case of error (fixes atteneder/DracoUnity#53)
 - Point clouds' index buffer is properly initialized (fixes atteneder/DracoUnity#64)
 - Properly set root namespace on all assembly definitions
+- Compilation succeeds on non-supported platforms (with no API exposed)
 
 ## [4.1.0] - 2023-04-14
 

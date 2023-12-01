@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Point clouds' index buffer is properly initialized (fixes atteneder/DracoUnity#64)
 - Properly set root namespace on all assembly definitions
 - Compilation succeeds on non-supported platforms (with no API exposed)
+- Crash in async Editor import
 
 ## [4.1.0] - 2023-04-14
 

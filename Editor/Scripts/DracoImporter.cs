@@ -16,14 +16,11 @@ namespace Draco.Editor
     class DracoImporter : ScriptedImporter
     {
 
-        public override async void OnImportAsset(AssetImportContext ctx)
+        public override void OnImportAsset(AssetImportContext ctx)
         {
-#if NET_UNITY_4_8 // Unity 2021 or newer
-            var dracoData = await File.ReadAllBytesAsync(ctx.assetPath);
-#else
+
             var dracoData = File.ReadAllBytes(ctx.assetPath);
-#endif
-            var mesh = await DracoDecoder.DecodeMeshInternal(dracoData, sync: true);
+            var mesh = AsyncHelpers.RunSync<Mesh>(() => DracoDecoder.DecodeMeshInternal(dracoData, sync: true));
             if (mesh == null)
             {
                 Debug.LogError("Import draco file failed");

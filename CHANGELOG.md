@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bumped Burst dependency to version 1.8.10
 - Renamed assembly definition `DracoEditor` to `Draco.Editor`
 - Renamed assembly definition `DracoRuntimeTests` to `Draco.Tests`
+- CI maintenance
 
 ### Removed
 - Obsolete console error about downgrading package for certain Unity versions

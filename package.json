@@ -21,9 +21,19 @@
   "type": "library",
   "samples": [
     {
-      "displayName": "Draco Tools Menu",
-      "description": "Encode GameObjects, Meshes or entire Scenes via the tools menu.",
-      "path": "Samples~/ToolsMenu"
+      "displayName": "Draco Decoding",
+      "description": "Demonstrates how to decode Draco data at runtime",
+      "path": "Samples~/Decode"
+    },
+    {
+      "displayName": "Draco Encoding",
+      "description": "Demonstrates how to encode Draco data at runtime",
+      "path": "Samples~/Encode"
+    },
+    {
+      "displayName": "Scene/GameObject Encoding/Decoding via Menu",
+      "description": "Encode Meshes, GameObjects or entire Scenes via the Tools and Assets menu and have them decoded when the scene loads.",
+      "path": "Samples~/SceneEncodeDecode"
     }
   ]
 }

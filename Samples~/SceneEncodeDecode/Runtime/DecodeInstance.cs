@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace Draco
+namespace Draco.Sample.SceneEncodeDecode
 {
 
     /// <summary>
     /// Lets you assigns Draco data (in form of a <see cref="TextAsset"/>) to one or more
     /// <see cref="MeshFilter"/> targets and decode them at runtime.
     /// </summary>
-    /// <seealso cref="DracoSceneLoader"/>
+    /// <seealso cref="DracoSceneDecoder"/>
     public class DecodeInstance : ScriptableObject
     {
 

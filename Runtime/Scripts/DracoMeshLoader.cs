@@ -9,7 +9,7 @@ using UnityEngine;
 namespace Draco
 {
     /// <summary>
-    /// Provides Draco mesh decoding.
+    /// Obsolete! Please use <see cref="DracoDecoder"/> instead. Provides Draco mesh decoding.
     /// </summary>
     /// <seealso cref="DracoDecoder"/>
     [Obsolete("Use DracoDecoder.DecodeMesh methods instead.")]

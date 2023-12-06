@@ -5,13 +5,13 @@ using System;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace Draco
+namespace Draco.Sample.SceneEncodeDecode
 {
 
     /// <summary>
     /// Decodes multiple Draco data and assigns it to <see cref="MeshFilter"/> targets.
     /// </summary>
-    public class DracoSceneLoader : MonoBehaviour
+    public class DracoSceneDecoder : MonoBehaviour
     {
 
         /// <summary>

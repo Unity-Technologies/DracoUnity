@@ -1,8 +1,9 @@
 {
-    "name": "Draco.MeshLoader",
-    "rootNamespace": "Draco",
+    "name": "Draco.Sample.Encode",
+    "rootNamespace": "",
     "references": [
-        "Draco"
+        "Draco",
+        "Draco.Encode"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

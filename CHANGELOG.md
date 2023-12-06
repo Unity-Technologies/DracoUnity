@@ -12,20 +12,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for iOS simulator
 - Support for Windows ARM64 architecture.
 - Support for Android x86_64
-- Package sample *Draco Tools Menu*. Demonstrates how to encode GameObjects, Meshes or entire Scenes via *Tools* menu.
+- Package samples
+  - *Draco Decoding*. Demonstrates how to decode Draco data at runtime.
+  - *Draco Encoding*. Demonstrates how to encode Draco data at runtime.
+  - *Scene/GameObject Encoding/Decoding via Menu*. Encode Meshes, GameObjects or entire Scenes via the Tools and Assets menu and have them decoded when the scene loads.
 
 ### Changed
 - Much faster encoding due to the use of the C# Job System (threads)
 - Faster encoding due to avoiding a full memory copy of the result
 - All encoding methods are async now
-- Updated Burst dependency to version 1.8.7
 - Readonly meshes now can be encoded in the Editor
 - Removed Editor-only `sync` parameter from `DracoMeshLoader.ConvertDracoMeshToUnity` to make API stable (regardless of environment/scripting defines)
 - WebGL native libraries are now installed via sub-packages
 - Minimum required Unity version was decreased to 2020.3 (possible because the WebGL version restriction was lifted with the sub-packages)
 - Automatic code formatting was applied to all source files
 - Consolidated split libraries into a single library named `draco_unity`
-- Updated Draco native library binaries to [3.0.0](https://github.com/Unity-Technologies/draco/releases/tag/unity%2F3.0.0)
+- Updated Draco native library binaries to [3.1.0](https://github.com/Unity-Technologies/draco/releases/tag/unity%2F3.1.0)
 - Bumped Burst dependency to version 1.8.10
 - Renamed assembly definition `DracoEditor` to `Draco.Editor`
 - Renamed assembly definition `DracoRuntimeTests` to `Draco.Tests`

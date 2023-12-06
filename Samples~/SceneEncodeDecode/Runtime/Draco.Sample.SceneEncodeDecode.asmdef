@@ -1,15 +1,10 @@
 {
-    "name": "Draco.Editor.ToolsMenu",
-    "rootNamespace": "Draco.Editor",
+    "name": "Draco.Sample.SceneEncodeDecode",
+    "rootNamespace": "Draco.Sample.SceneEncodeDecode",
     "references": [
-        "Draco",
-        "Draco.Encode",
-        "Draco.Editor",
-        "Draco.MeshLoader"
+        "Draco"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

@@ -16,13 +16,13 @@ namespace Draco.Tests
     public class UseDracoTestFileCaseAttribute : UnityEngine.TestTools.UnityTestAttribute, ITestBuilder
     {
 
-        string[] m_sampleSet = null;
+        string[] m_SampleSet;
 
-        NUnitTestCaseBuilder _builder = new NUnitTestCaseBuilder();
+        NUnitTestCaseBuilder m_Builder = new NUnitTestCaseBuilder();
 
         public UseDracoTestFileCaseAttribute(string[] sampleSetPath)
         {
-            m_sampleSet = sampleSetPath;
+            m_SampleSet = sampleSetPath;
         }
 
         IEnumerable<TestMethod> ITestBuilder.BuildFrom(IMethodInfo method, Test suite)
@@ -30,29 +30,27 @@ namespace Draco.Tests
             List<TestMethod> results = new List<TestMethod>();
             var nameCounts = new Dictionary<string, int>();
 
-            if (m_sampleSet == null)
+            if (m_SampleSet == null)
             {
-                throw new Exception("SampleSet not set");
+                throw new Exception("SampleSet  not set");
             }
 
             try
             {
-                foreach (var testCase in m_sampleSet)
+                foreach (var testCase in m_SampleSet)
                 {
                     var data = new TestCaseData(new object[] { testCase });
 
-                    var uri = new Uri(testCase, UriKind.RelativeOrAbsolute);
-
                     var origName = Path.GetFileName(testCase);
                     string name;
-                    if (nameCounts.TryGetValue(origName, out int count))
+                    if (nameCounts.TryGetValue(origName, out var count))
                     {
-                        name = string.Format("{0}-{1}", origName, count);
+                        name = $"{method.Name}-{origName}-{count}";
                         nameCounts[origName] = count + 1;
                     }
                     else
                     {
-                        name = origName;
+                        name = $"{method.Name}-{origName}";
                         nameCounts[origName] = 1;
                     }
 
@@ -60,7 +58,7 @@ namespace Draco.Tests
                     data.ExpectedResult = new UnityEngine.Object();
                     data.HasExpectedResult = true;
 
-                    var test = this._builder.BuildTestMethod(method, suite, data);
+                    var test = this.m_Builder.BuildTestMethod(method, suite, data);
                     if (test.parms != null)
                         test.parms.HasExpectedResult = false;
 

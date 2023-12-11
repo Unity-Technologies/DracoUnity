@@ -1,12 +1,20 @@
 // SPDX-FileCopyrightText: 2023 Unity Technologies and the Draco for Unity authors
 // SPDX-License-Identifier: Apache-2.0
 
+#if !(UNITY_ANDROID || UNITY_WEBGL) || UNITY_EDITOR
+#define LOCAL_LOADING
+#endif
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Unity.Collections;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Rendering;
@@ -16,12 +24,15 @@ namespace Draco.Tests
 {
 
     [TestFixture]
-    class DracoRuntimeTests
+    class DracoRuntimeTests : IPrebuildSetup
     {
 
         const string k_URLPrefix = "https://raw.githubusercontent.com/google/draco/master/testdata/";
 
-        static readonly string[] k_TestDataUrls = {
+        const string k_StreamingAssetsDir = "draco-test-data";
+
+        static readonly string[] k_TestDataUrls =
+        {
             "bunny_gltf.drc",
             "car.drc",
             "cube_att.obj.edgebreaker.cl10.2.2.drc",
@@ -35,68 +46,93 @@ namespace Draco.Tests
             "test_nm.obj.edgebreaker.cl10.2.2.drc",
             "test_nm.obj.edgebreaker.cl4.2.2.drc",
             "test_nm.obj.sequential.cl3.2.2.drc",
-
-            // // Legacy versions not supported
-            // "cube_pc.drc",
-            // "pc_color.drc",
-            // "test_nm.obj.edgebreaker.0.10.0.drc",
-            // "test_nm.obj.edgebreaker.0.9.1.drc",
-            // "test_nm.obj.edgebreaker.1.0.0.drc",
-            // "test_nm.obj.edgebreaker.1.1.0.drc",
-            // "test_nm.obj.sequential.0.10.0.drc",
-            // "test_nm.obj.sequential.0.9.1.drc",
-            // "test_nm.obj.sequential.1.0.0.drc",
-            // "test_nm.obj.sequential.1.1.0.drc",
-            // "test_nm_quant.0.9.0.drc",
-
             // // Unknown why it does not work
             // "cube_att.drc",
         };
 
-        static Dictionary<string, NativeArray<byte>> s_TestData;
+        /// <summary>
+        /// Legacy versions not supported
+        /// </summary>
+        static readonly string[] k_LegacyTestDataUrls = {
+            "cube_pc.drc",
+            "pc_color.drc",
+            "test_nm.obj.edgebreaker.0.10.0.drc",
+            "test_nm.obj.edgebreaker.0.9.1.drc",
+            "test_nm.obj.edgebreaker.1.0.0.drc",
+            "test_nm.obj.edgebreaker.1.1.0.drc",
+            "test_nm.obj.sequential.0.10.0.drc",
+            "test_nm.obj.sequential.0.9.1.drc",
+            "test_nm.obj.sequential.1.0.0.drc",
+            "test_nm.obj.sequential.1.1.0.drc",
+            "test_nm_quant.0.9.0.drc",
+        };
 
-        [UnitySetUp]
-        public IEnumerator OneTimeSetup()
+        public void Setup()
         {
-            if (s_TestData == null)
-            {
-                var task = LoadAllUrls();
-                while (!task.IsCompleted)
-                {
-                    yield return null;
-                }
-            }
+#if UNITY_EDITOR
+            DownloadTestData();
+            AssetDatabase.Refresh();
+#endif
         }
 
-        static async Task LoadAllUrls()
+#if UNITY_EDITOR
+        static void DownloadTestData()
         {
-            s_TestData = new Dictionary<string, NativeArray<byte>>(k_TestDataUrls.Length);
+            var allUrls = new List<string>();
+            allUrls.AddRange(k_TestDataUrls);
+            allUrls.AddRange(k_LegacyTestDataUrls);
 
-            foreach (var url in k_TestDataUrls)
+            var dir = Path.Combine(Application.streamingAssetsPath, k_StreamingAssetsDir);
+            if (!Directory.Exists(dir))
             {
+                Directory.CreateDirectory(dir);
+            }
+
+            foreach (var url in allUrls)
+            {
+                var destination = GetAbsolutePath(url);
+                if (File.Exists(destination))
+                {
+                    continue;
+                }
                 var webRequest = UnityWebRequest.Get(k_URLPrefix + url);
                 var x = webRequest.SendWebRequest();
-                while (!x.isDone)
-                {
-                    await Task.Yield();
-                }
+                while (!x.isDone) { }
                 if (!string.IsNullOrEmpty(webRequest.error))
                 {
-                    Debug.LogErrorFormat("Error loading {0}: {1}", url, webRequest.error);
+                    Debug.LogError($"Loading Draco test data failed!\nError loading {url}: {webRequest.error}");
                     return;
                 }
 
-                s_TestData[url] = new NativeArray<byte>(webRequest.downloadHandler.data, Allocator.Persistent);
+                File.WriteAllBytes(destination, webRequest.downloadHandler.data);
             }
         }
+#endif
 
-        [OneTimeTearDown]
-        public void OneTimeTearDown()
+        static string GetAbsolutePath(string name)
         {
-            foreach (var set in s_TestData)
+            return Path.Combine(Application.streamingAssetsPath, k_StreamingAssetsDir, name);
+        }
+
+        static async Task<NativeArray<byte>> GetTestData(string name)
+        {
+            var path = GetAbsolutePath(name);
+
+#if LOCAL_LOADING
+            path = $"file://{path}";
+#endif
+            var webRequest = UnityWebRequest.Get(path);
+            var x = webRequest.SendWebRequest();
+            while (!x.isDone)
             {
-                set.Value.Dispose();
+                await Task.Yield();
             }
+            if (!string.IsNullOrEmpty(webRequest.error))
+            {
+                Debug.LogErrorFormat("Error loading {0}: {1}", path, webRequest.error);
+            }
+
+            return new NativeArray<byte>(webRequest.downloadHandler.data, Allocator.Persistent);
         }
 
         [UnityTest]
@@ -157,7 +193,7 @@ namespace Draco.Tests
         })]
         public IEnumerator DecodeNormals(string url)
         {
-            yield return RunTest(url, LoadBatchToMeshData, true);
+            yield return RunTest(url, LoadBatchToMeshData, requireNormals: true);
         }
 
         [UnityTest]
@@ -176,18 +212,61 @@ namespace Draco.Tests
         })]
         public IEnumerator DecodeNormalsTangents(string url)
         {
-            yield return RunTest(url, LoadBatchToMeshData, true, true);
+            yield return RunTest(url, LoadBatchToMeshData, requireNormals: true, requireTangents: true);
         }
 
-        static IEnumerator RunTest(string url, Func<int, NativeArray<byte>, bool, bool, Task> loadBatchFunc, bool requireNormals = false, bool requireTangents = false)
+        [UnityTest]
+        [UseDracoTestFileCase(new[] {
+            "cube_pc.drc",
+            "pc_color.drc",
+            "test_nm.obj.edgebreaker.0.10.0.drc",
+            "test_nm.obj.edgebreaker.0.9.1.drc",
+            "test_nm.obj.edgebreaker.1.0.0.drc",
+            "test_nm.obj.edgebreaker.1.1.0.drc",
+            "test_nm.obj.sequential.0.10.0.drc",
+            "test_nm.obj.sequential.0.9.1.drc",
+            "test_nm.obj.sequential.1.0.0.drc",
+            "test_nm.obj.sequential.1.1.0.drc",
+            "test_nm_quant.0.9.0.drc",
+        })]
+        public IEnumerator DecodeLegacyMustFail(string url)
         {
-            var data = s_TestData[url];
+            yield return RunTest(url, LoadBatchToMeshData, false);
+        }
+
+        static IEnumerator RunTest(
+            string url,
+            Func<int, NativeArray<byte>, bool, bool, Task> loadBatchFunc,
+            bool mustSucceed = true,
+            bool requireNormals = false,
+            bool requireTangents = false
+            )
+        {
+            var dataTask = GetTestData(url);
+            while (!dataTask.IsCompleted)
+            {
+                yield return null;
+            }
+            if (dataTask.Exception != null)
+            {
+                throw dataTask.Exception;
+            }
+            var data = dataTask.Result;
             var task = loadBatchFunc(1, data, requireNormals, requireTangents);
             while (!task.IsCompleted)
             {
                 yield return null;
             }
-            Assert.IsNull(task.Exception);
+
+            if (mustSucceed)
+            {
+                Assert.IsNull(task.Exception);
+            }
+            else
+            {
+                Assert.IsNotNull(task.Exception?.InnerException);
+                Assert.AreEqual("Draco mesh decoding failed.", task.Exception.InnerException.Message);
+            }
         }
 
         static async Task LoadBatchToMeshData(int quantity, NativeArray<byte> data, bool requireNormals = false, bool requireTangents = false)
@@ -209,8 +288,7 @@ namespace Draco.Tests
                 var result = await task;
                 if (!result.success)
                 {
-                    Debug.LogError("Loading mesh failed");
-                    return;
+                    throw new ArgumentException("Draco mesh decoding failed.");
                 }
             }
 

@@ -251,7 +251,7 @@ namespace Draco.Tests
             {
                 throw dataTask.Exception;
             }
-            var data = dataTask.Result;
+            using var data = dataTask.Result;
             var task = loadBatchFunc(1, data, requireNormals, requireTangents);
             while (!task.IsCompleted)
             {
@@ -288,6 +288,7 @@ namespace Draco.Tests
                 var result = await task;
                 if (!result.success)
                 {
+                    meshDataArray.Dispose();
                     throw new ArgumentException("Draco mesh decoding failed.");
                 }
             }

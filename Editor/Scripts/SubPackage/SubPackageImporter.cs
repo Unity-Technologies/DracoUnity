@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2023 Unity Technologies and the Draco for Unity authors
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -64,28 +65,6 @@ namespace SubPackage
 #endif
         }
 
-        static async Task AddAsync(string package)
-        {
-            var result = Client.Add(package);
-
-            while (!result.IsCompleted)
-                await Yield();
-
-            if (result.Status != StatusCode.Success)
-                Debug.LogError(result.Error.message);
-        }
-
-        static async Task RemoveAsync(string package)
-        {
-            var result = Client.Remove(package);
-
-            while (!result.IsCompleted)
-                await Yield();
-
-            if (result.Status != StatusCode.Success)
-                Debug.LogError(result.Error.message);
-        }
-
 #if UNITY_2021_2_OR_NEWER
         static async Task AddAndRemoveAsync(string[] add, string[] remove)
         {
@@ -97,15 +76,70 @@ namespace SubPackage
             if (result.Status != StatusCode.Success)
                 Debug.LogError(result.Error.message);
         }
+#else
+        static async Task AddAsync(string package, double timeout = 60)
+        {
+            var startTime = EditorApplication.timeSinceStartup;
+            var result = Client.Add(package);
+
+            while (!result.IsCompleted)
+            {
+                if (EditorApplication.timeSinceStartup - startTime <= timeout)
+                {
+                    await Yield();
+                }
+            }
+
+            if (!result.IsCompleted || result.Status != StatusCode.Success)
+            {
+                Debug.LogError($"Unable to add {SubPackageConfiguration.packageName} WebGL sub-packages.");
+
+                if (result.Status != StatusCode.Success)
+                {
+                    Debug.LogError(result.Error.message);
+                }
+            }
+        }
+
+        static async Task RemoveAsync(string package, double timeout = 60)
+        {
+            var startTime = EditorApplication.timeSinceStartup;
+            var result = Client.Remove(package);
+
+            while (!result.IsCompleted)
+            {
+                if (EditorApplication.timeSinceStartup - startTime <= timeout)
+                {
+                    await Yield();
+                }
+            }
+
+            if (!result.IsCompleted || result.Status != StatusCode.Success)
+            {
+                Debug.LogError($"Unable to remove {SubPackageConfiguration.packageName} WebGL sub-packages.");
+
+                if (result.Status != StatusCode.Success)
+                {
+                    Debug.LogError(result.Error.message);
+                }
+            }
+        }
 #endif
 
-        static async Task<List<PackageInfo>> GetAllInstalledPackagesAsync()
+        static async Task<List<PackageInfo>> GetAllInstalledPackagesAsync(double timeout = 60)
         {
+            var startTime = EditorApplication.timeSinceStartup;
             var request = Client.List(offlineMode: true, includeIndirectDependencies: false);
 
             while (!request.IsCompleted)
-                await Yield();
+            {
+                if (EditorApplication.timeSinceStartup - startTime <= timeout)
+                {
+                    await Yield();
+                }
+            }
 
+            Assert.IsTrue(request.IsCompleted);
             Assert.AreEqual(StatusCode.Success, request.Status);
 
             return request.Result.ToList();
@@ -113,7 +147,7 @@ namespace SubPackage
 
         static List<PackageInfo> GetSubPackages(SubPackageConfigSchema config, List<PackageInfo> installedPackages)
         {
-            Regex regex = new Regex(config.cleanupRegex);
+            var regex = new Regex(config.cleanupRegex, RegexOptions.CultureInvariant, TimeSpan.FromMinutes(1));
 
             return installedPackages
                 .Where(package => regex.IsMatch(package.name))

@@ -1,6 +1,6 @@
 # Draco for Unity Documentation
 
-* [Draco for Unity](index.md)  
+* [Draco for Unity](index.md)
   * [What's new](whats-new.md)
   * [Upgrade guide](upgrade-guide.md)
 * [Prerequisites](prerequisites.md)

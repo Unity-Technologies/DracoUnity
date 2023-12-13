@@ -345,7 +345,7 @@ namespace Draco
         {
             return (IntPtr)UnsafeUtility.PinGCArrayAndGetDataAddress(encodedData, out gcHandle);
         }
-        
+
 #if !UNITY_EDITOR
         [Conditional("DRACO_PLATFORM_NOT_SUPPORTED")]
 #endif

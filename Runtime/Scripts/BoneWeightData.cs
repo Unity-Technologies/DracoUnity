@@ -11,7 +11,7 @@ namespace Draco
     /// Draco encoded meshes might contain bone weights and indices that cannot be applied to the resulting Unity
     /// mesh right away. This class provides them and offers methods to apply them to Unity meshes.
     /// </summary>
-    public class BoneWeightData : IDisposable
+    public sealed class BoneWeightData : IDisposable
     {
         NativeArray<byte> m_BonesPerVertex;
         NativeArray<BoneWeight1> m_BoneWeights;

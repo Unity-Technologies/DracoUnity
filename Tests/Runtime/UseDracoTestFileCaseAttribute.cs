@@ -16,9 +16,9 @@ namespace Draco.Tests
     public class UseDracoTestFileCaseAttribute : UnityEngine.TestTools.UnityTestAttribute, ITestBuilder
     {
 
-        string[] m_SampleSet;
+        readonly string[] m_SampleSet;
 
-        NUnitTestCaseBuilder m_Builder = new NUnitTestCaseBuilder();
+        readonly NUnitTestCaseBuilder m_Builder = new NUnitTestCaseBuilder();
 
         public UseDracoTestFileCaseAttribute(string[] sampleSetPath)
         {

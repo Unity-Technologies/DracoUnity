@@ -239,9 +239,9 @@ namespace Draco.Encode
             int genericQuantization = 12
         )
         {
-#if UNITY_2020_1_OR_NEWER
 #if !UNITY_EDITOR
-            if (!mesh.isReadable) {
+            if (!mesh.isReadable)
+            {
                 Debug.LogError("Mesh is not readable");
                 return null;
             }
@@ -254,7 +254,8 @@ namespace Draco.Encode
             var strides = new int[DracoNative.maxStreamCount];
             var attributeDataDict = new Dictionary<VertexAttribute, AttributeData>();
 
-            foreach (var attribute in vertexAttributes) {
+            foreach (var attribute in vertexAttributes)
+            {
                 var attributeData = new AttributeData { offset = strides[attribute.stream], stream = attribute.stream };
                 var size = attribute.dimension * GetAttributeSize(attribute.format);
                 strides[attribute.stream] += size;
@@ -262,26 +263,30 @@ namespace Draco.Encode
             }
 
             var streamCount = 1;
-            for (var stream = 0; stream < strides.Length; stream++) {
+            for (var stream = 0; stream < strides.Length; stream++)
+            {
                 var stride = strides[stream];
-                if(stride<=0) continue;
+                if (stride <= 0) continue;
                 streamCount = stream + 1;
             }
 
             var vData = new NativeArray<byte>[streamCount];
-            for (var stream = 0; stream < streamCount; stream++) {
+            for (var stream = 0; stream < streamCount; stream++)
+            {
                 vData[stream] = meshData.GetVertexData<byte>(stream);
             }
 
             var vDataPtr = GetReadOnlyPointers(streamCount, vData);
             Profiler.EndSample(); // EncodeMesh.Prepare
 
-            for (var submeshIndex = 0; submeshIndex < mesh.subMeshCount; submeshIndex++) {
+            for (var submeshIndex = 0; submeshIndex < mesh.subMeshCount; submeshIndex++)
+            {
 
                 Profiler.BeginSample("EncodeMesh.Submesh.Prepare");
                 var submesh = mesh.GetSubMesh(submeshIndex);
 
-                if (submesh.topology != MeshTopology.Triangles && submesh.topology != MeshTopology.Points) {
+                if (submesh.topology != MeshTopology.Triangles && submesh.topology != MeshTopology.Points)
+                {
                     Debug.LogError($"Mesh topology {submesh.topology} is not supported");
                     return null;
                 }
@@ -290,7 +295,7 @@ namespace Draco.Encode
                     ? dracoEncoderCreate(mesh.vertexCount)
                     : dracoEncoderCreatePointCloud(mesh.vertexCount);
 
-                var attributeIds = new Dictionary<VertexAttribute,(uint identifier,int dimensions)>();
+                var attributeIds = new Dictionary<VertexAttribute, (uint identifier, int dimensions)>();
 
                 foreach (var attributeTuple in attributeDataDict)
                 {
@@ -302,7 +307,7 @@ namespace Draco.Encode
                     var baseAddr = vDataPtr[attrData.stream] + attrData.offset;
                     var id = dracoEncoderSetAttribute(
                         dracoEncoder,
-                        (int) GetAttributeType(attribute),
+                        (int)GetAttributeType(attribute),
                         GetDataType(format),
                         dimension,
                         stride,
@@ -327,14 +332,14 @@ namespace Draco.Encode
                 }
 
                 // For both encoding and decoding (0 = slow and best compression; 10 = fast)
-                dracoEncoderSetCompressionSpeed(dracoEncoder, Mathf.Clamp(encodingSpeed,0,10), Mathf.Clamp(decodingSpeed,0,10));
+                dracoEncoderSetCompressionSpeed(dracoEncoder, Mathf.Clamp(encodingSpeed, 0, 10), Mathf.Clamp(decodingSpeed, 0, 10));
                 dracoEncoderSetQuantizationBits(
                     dracoEncoder,
-                    Mathf.Clamp(positionQuantization,4,24),
-                    Mathf.Clamp(normalQuantization,4,24),
-                    Mathf.Clamp(texCoordQuantization,4,24),
-                    Mathf.Clamp(colorQuantization,4,24),
-                    Mathf.Clamp(genericQuantization,4,24)
+                    Mathf.Clamp(positionQuantization, 4, 24),
+                    Mathf.Clamp(normalQuantization, 4, 24),
+                    Mathf.Clamp(texCoordQuantization, 4, 24),
+                    Mathf.Clamp(colorQuantization, 4, 24),
+                    Mathf.Clamp(genericQuantization, 4, 24)
                 );
 
                 var encodeJob = new EncodeJob
@@ -353,7 +358,7 @@ namespace Draco.Encode
 
                 Profiler.BeginSample("EncodeMesh.Submesh.Aftermath");
 
-                result[submeshIndex] = new EncodeResult (
+                result[submeshIndex] = new EncodeResult(
                     dracoEncoder,
                     dracoEncoderGetEncodedIndexCount(dracoEncoder),
                     dracoEncoderGetEncodedVertexCount(dracoEncoder),
@@ -364,16 +369,13 @@ namespace Draco.Encode
             }
 
             Profiler.BeginSample("EncodeMesh.Aftermath");
-            for (var stream = 0; stream < streamCount; stream++) {
+            for (var stream = 0; stream < streamCount; stream++)
+            {
                 vData[stream].Dispose();
             }
 
             Profiler.EndSample();
             return result;
-#else
-            Debug.LogError("Draco Encoding only works on Unity 2020.1 or newer");
-            return null;
-#endif
         }
 
         static unsafe IntPtr PinArray(int[] indices, out ulong gcHandle)

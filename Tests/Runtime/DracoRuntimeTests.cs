@@ -9,6 +9,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Unity.Collections;
@@ -97,7 +98,10 @@ namespace Draco.Tests
                 }
                 var webRequest = UnityWebRequest.Get(k_URLPrefix + url);
                 var x = webRequest.SendWebRequest();
-                while (!x.isDone) { }
+                while (!x.isDone)
+                {
+                    Thread.Sleep(100);
+                }
                 if (!string.IsNullOrEmpty(webRequest.error))
                 {
                     Debug.LogError($"Loading Draco test data failed!\nError loading {url}: {webRequest.error}");

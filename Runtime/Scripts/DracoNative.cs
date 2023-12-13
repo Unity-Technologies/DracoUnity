@@ -896,7 +896,7 @@ namespace Draco
         static extern bool GetAttributeData(
             DracoMesh* mesh, DracoAttribute* attr, DracoData** data, bool flip, int componentStride);
 
-        abstract class AttributeMapBase : IComparable<AttributeMapBase>
+        abstract class AttributeMapBase : IComparable<AttributeMapBase>, IDisposable
         {
             public readonly VertexAttribute attribute;
             public VertexAttributeFormat format;
@@ -915,7 +915,7 @@ namespace Draco
             public abstract int numComponents { get; }
             public abstract int elementSize { get; }
 
-            public virtual void Dispose() { }
+            public abstract void Dispose();
 
             public VertexAttributeDescriptor GetVertexAttributeDescriptor()
             {
@@ -988,6 +988,8 @@ namespace Draco
 
             public override int numComponents => m_NumComponents;
             public override int elementSize => m_ElementSize;
+
+            public override void Dispose() { }
         }
 
         [BurstCompile]

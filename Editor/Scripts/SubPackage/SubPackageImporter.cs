@@ -18,6 +18,8 @@ namespace SubPackage
 {
     static class SubPackageImporter
     {
+        static string s_ErrorMessage = $"Error adding {SubPackageConfiguration.packageName} WebGL sub-packages.";
+
 #if !DISABLE_SUB_PACKAGE_LOAD
         [InitializeOnLoadMethod]
 #endif
@@ -82,17 +84,14 @@ namespace SubPackage
             var startTime = EditorApplication.timeSinceStartup;
             var result = Client.Add(package);
 
-            while (!result.IsCompleted)
+            while (!result.IsCompleted && EditorApplication.timeSinceStartup - startTime <= timeout)
             {
-                if (EditorApplication.timeSinceStartup - startTime <= timeout)
-                {
-                    await Yield();
-                }
+                await Yield();
             }
 
             if (!result.IsCompleted || result.Status != StatusCode.Success)
             {
-                Debug.LogError($"Unable to add {SubPackageConfiguration.packageName} WebGL sub-packages.");
+                Debug.LogError(s_ErrorMessage);
 
                 if (result.Status != StatusCode.Success)
                 {
@@ -106,17 +105,14 @@ namespace SubPackage
             var startTime = EditorApplication.timeSinceStartup;
             var result = Client.Remove(package);
 
-            while (!result.IsCompleted)
+            while (!result.IsCompleted && EditorApplication.timeSinceStartup - startTime <= timeout)
             {
-                if (EditorApplication.timeSinceStartup - startTime <= timeout)
-                {
-                    await Yield();
-                }
+                await Yield();
             }
 
             if (!result.IsCompleted || result.Status != StatusCode.Success)
             {
-                Debug.LogError($"Unable to remove {SubPackageConfiguration.packageName} WebGL sub-packages.");
+                Debug.LogError(s_ErrorMessage);
 
                 if (result.Status != StatusCode.Success)
                 {
@@ -131,16 +127,16 @@ namespace SubPackage
             var startTime = EditorApplication.timeSinceStartup;
             var request = Client.List(offlineMode: true, includeIndirectDependencies: false);
 
-            while (!request.IsCompleted)
+            while (!request.IsCompleted && EditorApplication.timeSinceStartup - startTime <= timeout)
             {
-                if (EditorApplication.timeSinceStartup - startTime <= timeout)
-                {
-                    await Yield();
-                }
+                await Yield();
             }
 
-            Assert.IsTrue(request.IsCompleted);
-            Assert.AreEqual(StatusCode.Success, request.Status);
+            if (!request.IsCompleted)
+            {
+                throw new TimeoutException(s_ErrorMessage);
+            }
+            Assert.AreEqual(StatusCode.Success, request.Status, $"{s_ErrorMessage}. Failed fetching installed packages.");
 
             return request.Result.ToList();
         }

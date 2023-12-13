@@ -9,7 +9,7 @@ namespace SubPackage
     {
         internal const string packageName = "Draco for Unity";
 
-        internal static SubPackageConfigSchema config = new SubPackageConfigSchema
+        internal static readonly SubPackageConfigSchema config = new SubPackageConfigSchema
         {
             dialogTitle = "Installing Sub Packages",
             dialogText = $"The {packageName} package requires sub-packages which vary, depending on the Unity version. These dependencies will now be updated automatically and will appear in your project's manifest file.",
@@ -22,25 +22,25 @@ namespace SubPackage
                 {
                     name = "com.unity.cloud.draco.webgl-2023",
                     minimumUnityVersion = "2023.2.0a17",
-                    version = "1.0.0-pre.1"
+                    version = "1.0.0-pre.2"
                 },
                 new SubPackageEntrySchema
                 {
                     name = "com.unity.cloud.draco.webgl-2022",
                     minimumUnityVersion = "2022.2.0",
-                    version = "1.0.0-pre.1"
+                    version = "1.0.0-pre.2"
                 },
                 new SubPackageEntrySchema
                 {
                     name = "com.unity.cloud.draco.webgl-2021",
                     minimumUnityVersion = "2021.2.0",
-                    version = "1.0.0-pre.1"
+                    version = "1.0.0-pre.2"
                 },
                 new SubPackageEntrySchema
                 {
                     name = "com.unity.cloud.draco.webgl-2020",
                     minimumUnityVersion = "2019.2.0",
-                    version = "1.0.0-pre.1"
+                    version = "1.0.0-pre.2"
                 }
             }
         };

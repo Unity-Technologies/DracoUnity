@@ -25,17 +25,35 @@ namespace Draco.Sample.Decode
 
         async void Start()
         {
-            // Allocate single mesh data (you can/should bulk allocate multiple at once, if you're loading multiple draco meshes)
+            // Allocate single mesh data (you can/should bulk allocate multiple at once, if you're loading multiple
+            // Draco meshes)
             var meshDataArray = Mesh.AllocateWritableMeshData(1);
 
+            // DecodeFlags hold a couple of decode settings
+            var decodeFlags = DecodeFlags.None;
+
+            if (m_ConvertSpace)
+            {
+                // Coordinate space is converted from right-hand (like in glTF) to left-hand (Unity) by inverting the
+                // x-axis.
+                decodeFlags |= DecodeFlags.ConvertSpace;
+            }
+
+            if (m_RequireTangents)
+            {
+                // Ensures normal and tangent vertex attributes. If Draco data does not contain them, they are still
+                // allocated and we have to calculate them afterwards (see below).
+                decodeFlags |= DecodeFlags.RequireNormalsAndTangents;
+            }
+            else if (m_RequireNormals)
+            {
+                // Ensures normal vertex attribute. If Draco data does not normals, they are still allocated and we have
+                // to calculate them afterwards (see below)
+                decodeFlags |= DecodeFlags.RequireNormals;
+            }
+
             // Async decoding has to start on the main thread and spawns multiple C# jobs.
-            var result = await DracoDecoder.DecodeMesh(
-                meshDataArray[0],
-                m_DracoData.bytes,
-                convertSpace: m_ConvertSpace,
-                requireNormals: m_RequireNormals, // Set to true if you require normals. If Draco data does not contain them, they are allocated and we have to calculate them below
-                requireTangents: m_RequireTangents // Retrieve tangents is not supported, but this will ensure they are allocated and can be calculated later (see below)
-                );
+            var result = await DracoDecoder.DecodeMesh(meshDataArray[0], m_DracoData.bytes, decodeFlags);
 
             if (result.success)
             {

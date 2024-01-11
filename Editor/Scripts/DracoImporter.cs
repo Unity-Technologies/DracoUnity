@@ -16,7 +16,8 @@ namespace Draco.Editor
         {
 
             var dracoData = File.ReadAllBytes(ctx.assetPath);
-            var mesh = AsyncHelpers.RunSync<Mesh>(() => DracoDecoder.DecodeMeshInternal(dracoData, sync: true));
+            var mesh = AsyncHelpers.RunSync(() =>
+                DracoDecoder.DecodeMeshInternal(dracoData, DecodeFlags.Default, null, true));
             if (mesh == null)
             {
                 Debug.LogError("Import draco file failed");

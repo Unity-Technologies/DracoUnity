@@ -19,7 +19,24 @@ If you copy a Draco (`.drc`) into the Assets folder directly, it'll get decoded 
 
 Decoding can be achieved by calling one of the [DecodeMesh](xref:Draco.DracoDecoder.DecodeMesh*) overloads.
 
-They differ in input data type (`byte[]`/`NativeSlice<byte>`) and [simple vs. advanced Mesh API](xref:UnityEngine.Mesh).
+They differ in input data type (`byte[]`/`NativeSlice<byte>`) and [simple vs. advanced Mesh API](xref:UnityEngine.Mesh) and optionally take [`decodeFlags`](xref:Draco.DecodeFlags) and `attributeIdMap` parameters.
+
+### Attribute assignment via Draco identifier
+
+[DecodeMesh](xref:Draco.DracoDecoder.DecodeMesh*)'s `attributeIdMap` parameter allows assignment of Draco vertex attributes to Unity Mesh vertex attributes.
+
+In Draco data vertex attributes have a unique identifier (integer value) and one of these types:
+
+- Position
+- Color
+- TextureCoordinate
+- Generic
+
+Source: [`geometry_attribute.h`](https://github.com/google/draco/blob/9f856abaafb4b39f1f013763ff061522e0261c6f/src/draco/attributes/geometry_attribute.h#L46) (bit-stream version 2,2)
+
+Upon decoding, *Draco for Unity* assign Draco attributes to Unity attributes via the identifier in the `attributeIdMap`. If the id for a particular vertex attribute is not provided, it falls back to assigning by type. In other words, all attributes are queried and if one matches the given type, it gets assigned and decoded.
+
+You might notice that some Unity vertex attributes are missing in Draco (most notably tangents, blend weights and blend indices). They can still be encoded as generic attributes, but they require re-assignment via an identifier via `attributeIdMap`. In practice this is usually done via an enclosing data format (like [glTF&trade;](do-more.md#draco-and-gltf)) that stores this assignment information.
 
 ### Decode to Mesh
 
@@ -46,7 +63,7 @@ Here's a full example
 
 ### Shading parameters
 
-Some shaders might require a mesh to have correct normals (or normals plus tangents). For example, the *Unlit* (a flat-shaded color) shader doesn't require neither while another one with a normal map requires both. A Draco mesh might not contain normals or tangents and in those cases normals (or normals and tangents) need to be calculated. The [DecodeMesh](xref:Draco.DracoDecoder.DecodeMesh*) parameters `requireNormals` and `requireTangents` allow you to pass on that aspect of the anticipated mesh application.
+Some shaders might require a mesh to have correct normals (or normals plus tangents). For example, the *Unlit* (a flat-shaded color) shader doesn't require neither while another one with a normal map requires both. A Draco mesh might not contain normals or tangents and in those cases normals (or normals and tangents) need to be calculated. The [DecodeMesh](xref:Draco.DracoDecoder.DecodeMesh*)'s [`decodeFlags`](xref:Draco.DecodeFlags) parameter's [`RequireNormals`](xref:Draco.DecodeFlags.RequireNormals), [`RequireTangents`](xref:Draco.DecodeFlags.RequireTangents) and [`RequireNormalsAndTangents`](xref:Draco.DecodeFlags.RequireNormalsAndTangents) fields allow you to pass on that aspect of the anticipated mesh application.
 
 [DecodeMesh](xref:Draco.DracoDecoder.DecodeMesh*) overloads the return a ready-to-use [Mesh](xref:UnityEngine.Mesh) will perform the normals/tangents calculations internally.
 
@@ -54,9 +71,9 @@ On [DecodeMesh](xref:Draco.DracoDecoder.DecodeMesh*) overloads that work on [Mes
 
 ### Blend shapes parameters
 
-Bone weight and joint attributes (required for blend shapes, also known as skinning or morph targets) are stored as generic attributes within Draco, thus it's not feasible to detect their type from the meta-data only. Usually an enclosing data format (like [glTF&trade;](do-more.md#draco-and-gltf)) stores this information in form of an attribute ID. The [DecodeMesh](xref:Draco.DracoDecoder.DecodeMesh*) parameters `weightsAttributeId` and `jointsAttributeId` allow you to pass this information so those generic attributes can be assigned to their respective purpose.
+Bone weight and joint attributes (required for blend shapes, also known as skinning or morph targets) are stored as generic attributes within Draco, thus it's required to assign those by identifier. See [Attribute assignment via Draco identifier](#attribute-assignment-via-draco-identifier) for details about attribute assignment.
 
-During development it was discovered that not all vertex buffer layout variants are compatible with blend shapes. You can enforce a Unity specific layout that promises high compatibility by setting the `forceUnityLayout` to `true`.
+Not all vertex buffer layout variants are compatible with blend shapes. If you encounter problems, enforce a Unity specific layout that promises high compatibility by setting the `forceUnityLayout` to `true`.
 
 ## Decode Sample
 

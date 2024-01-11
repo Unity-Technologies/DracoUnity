@@ -39,6 +39,7 @@ namespace Draco
         /// <param name="jointsAttributeId">Draco attribute ID that contains bone joint indices (for skinning)</param>
         /// <param name="forceUnityLayout">Enforces vertex buffer layout with highest compatibility. Enable this if you want to use blend shapes on the resulting mesh</param>
         /// <returns>Unity Mesh or null in case of errors</returns>
+        /// <seealso cref="Draco.DracoDecoder.DecodeMesh(NativeSlice{byte})"/>
         [Obsolete("Use DracoDecoder.DecodeMesh instead.")]
         public async Task<Mesh> ConvertDracoMeshToUnity(
             NativeSlice<byte> encodedData,
@@ -51,13 +52,19 @@ namespace Draco
         {
             return await DracoDecoder.DecodeMesh(
                 encodedData,
-                m_ConvertSpace,
-                requireNormals,
-                requireTangents,
-                weightsAttributeId,
-                jointsAttributeId,
-                forceUnityLayout
+                CreateDecodeFlags(requireNormals, requireTangents, forceUnityLayout),
+                DracoDecoder.CreateAttributeIdMap(weightsAttributeId, jointsAttributeId)
                 );
+        }
+
+        DecodeFlags CreateDecodeFlags(bool requireNormals, bool requireTangents, bool forceUnityLayout)
+        {
+            var flags = DecodeFlags.None;
+            if (requireNormals) flags |= DecodeFlags.RequireNormals;
+            if (requireTangents) flags |= DecodeFlags.RequireTangents;
+            if (forceUnityLayout) flags |= DecodeFlags.ForceUnityVertexLayout;
+            if (m_ConvertSpace) flags |= DecodeFlags.ConvertSpace;
+            return flags;
         }
 
         /// <summary>
@@ -70,6 +77,7 @@ namespace Draco
         /// <param name="jointsAttributeId">Draco attribute ID that contains bone joint indices (for skinning)</param>
         /// <param name="forceUnityLayout">Enforces vertex buffer layout with highest compatibility. Enable this if you want to use blend shapes on the resulting mesh</param>
         /// <returns>Unity Mesh or null in case of errors</returns>
+        /// <seealso cref="Draco.DracoDecoder.DecodeMesh(byte[])"/>
         [Obsolete("Use DracoDecoder.DecodeMesh instead.")]
         public async Task<Mesh> ConvertDracoMeshToUnity(
             byte[] encodedData,
@@ -82,12 +90,8 @@ namespace Draco
         {
             return await DracoDecoder.DecodeMesh(
                 encodedData,
-                m_ConvertSpace,
-                requireNormals,
-                requireTangents,
-                weightsAttributeId,
-                jointsAttributeId,
-                forceUnityLayout
+                CreateDecodeFlags(requireNormals, requireTangents, forceUnityLayout),
+                DracoDecoder.CreateAttributeIdMap(weightsAttributeId, jointsAttributeId)
             );
         }
 
@@ -102,6 +106,7 @@ namespace Draco
         /// <param name="jointsAttributeId">Draco attribute ID that contains bone joint indices (for skinning)</param>
         /// <param name="forceUnityLayout">Enforces vertex buffer layout with highest compatibility. Enable this if you want to use blend shapes on the resulting mesh</param>
         /// <returns>A DecodeResult</returns>
+        /// <seealso cref="Draco.DracoDecoder.DecodeMesh(Mesh.MeshData,byte[])"/>
         [Obsolete("Use DracoDecoder.DecodeMesh instead.")]
         public async Task<DecodeResult> ConvertDracoMeshToUnity(
             Mesh.MeshData mesh,
@@ -116,12 +121,8 @@ namespace Draco
             return await DracoDecoder.DecodeMesh(
                 mesh,
                 encodedData,
-                m_ConvertSpace,
-                requireNormals,
-                requireTangents,
-                weightsAttributeId,
-                jointsAttributeId,
-                forceUnityLayout
+                CreateDecodeFlags(requireNormals, requireTangents, forceUnityLayout),
+                DracoDecoder.CreateAttributeIdMap(weightsAttributeId, jointsAttributeId)
             );
         }
 
@@ -136,6 +137,7 @@ namespace Draco
         /// <param name="jointsAttributeId">Draco attribute ID that contains bone joint indices (for skinning)</param>
         /// <param name="forceUnityLayout">Enforces vertex buffer layout with highest compatibility. Enable this if you want to use blend shapes on the resulting mesh</param>
         /// <returns>A DecodeResult</returns>
+        /// <seealso cref="Draco.DracoDecoder.DecodeMesh(Mesh.MeshData,NativeSlice{byte})"/>
         [Obsolete("Use DracoDecoder.DecodeMesh instead.")]
         public async Task<DecodeResult> ConvertDracoMeshToUnity(
             Mesh.MeshData mesh,
@@ -150,12 +152,8 @@ namespace Draco
             return await DracoDecoder.DecodeMesh(
                 mesh,
                 encodedData,
-                m_ConvertSpace,
-                requireNormals,
-                requireTangents,
-                weightsAttributeId,
-                jointsAttributeId,
-                forceUnityLayout
+                CreateDecodeFlags(requireNormals, requireTangents, forceUnityLayout),
+                DracoDecoder.CreateAttributeIdMap(weightsAttributeId, jointsAttributeId)
             );
         }
     }

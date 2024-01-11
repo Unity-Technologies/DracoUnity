@@ -20,60 +20,6 @@ using UnityEngine.Rendering;
 
 namespace Draco
 {
-    /// <summary>
-    /// Attribute data type as defined in draco_types.h
-    /// </summary>
-    enum DataType
-    {
-        ///<summary>DT_INVALID</summary>
-        Invalid = 0,
-        ///<summary>DT_INT8</summary>
-        Int8,
-        ///<summary>DT_UINT8</summary>
-        UInt8,
-        ///<summary>DT_INT16</summary>
-        Int16,
-        ///<summary>DT_UINT16</summary>
-        UInt16,
-        ///<summary>DT_INT32</summary>
-        Int32,
-        ///<summary>DT_UINT32</summary>
-        UInt32,
-        ///<summary>DT_INT64</summary>
-        Int64,
-        ///<summary>DT_UINT64</summary>
-        UInt64,
-        ///<summary>DT_FLOAT32</summary>
-        Float32,
-        ///<summary>DT_FLOAT64</summary>
-        Float64,
-        ///<summary>DT_BOOL</summary>
-        Bool
-    }
-
-    /// <summary>
-    /// GeometryAttribute::Type as defined in geometry_attribute.h
-    /// </summary>
-    enum AttributeType
-    {
-        ///<summary>GeometryAttribute::Type::INVALID</summary>
-        Invalid = -1,
-        ///<summary>GeometryAttribute::Type::POSITION</summary>
-        Position = 0,
-        ///<summary>GeometryAttribute::Type::NORMAL</summary>
-        Normal,
-        ///<summary>GeometryAttribute::Type::COLOR</summary>
-        Color,
-        ///<summary>GeometryAttribute::Type::TEX_COORD</summary>
-        TextureCoordinate,
-        ///<summary>
-        /// GeometryAttribute::Type::GENERIC.
-        /// A special id used to mark attributes that are not assigned to any known predefined use case.
-        /// Such attributes are often used for a shader specific data.
-        /// </summary>
-        Generic
-    }
-
     [BurstCompile]
     unsafe class DracoNative
     {
@@ -107,10 +53,7 @@ namespace Draco
         static FunctionPointer<GetDracoBonesJob.GetIndexValueDelegate> s_GetIndexValueInt32Method;
         static FunctionPointer<GetDracoBonesJob.GetIndexValueDelegate> s_GetIndexValueUInt32Method;
 
-        /// <summary>
-        /// If true, coordinate space is converted from right-hand (like in glTF) to left-hand (Unity).
-        /// </summary>
-        bool m_ConvertSpace;
+        DecodeFlags m_DecodeFlags;
 
         List<AttributeMapBase> m_Attributes;
         int[] m_StreamStrides;
@@ -140,10 +83,10 @@ namespace Draco
 
         public DracoNative(
             Mesh.MeshData mesh,
-            bool convertSpace = true
+            DecodeFlags decodeFlags
             )
         {
-            m_ConvertSpace = convertSpace;
+            m_DecodeFlags = decodeFlags;
             m_Mesh = mesh;
         }
 
@@ -181,144 +124,37 @@ namespace Draco
 
         void CalculateVertexParams(
             DracoMesh* dracoMesh,
-            bool requireNormals,
-            bool requireTangents,
-            int weightsAttributeId,
-            int jointsAttributeId,
-            out bool calculateNormals,
-            bool forceUnityLayout = false
+            Dictionary<VertexAttribute, int> attributeIdMap,
+            out bool calculateNormals
             )
         {
             Profiler.BeginSample("CalculateVertexParams");
-            m_Attributes = new List<AttributeMapBase>();
-            var attributeTypes = new HashSet<VertexAttribute>();
 
-            bool CreateAttributeMaps(AttributeType attributeType, int count, DracoMesh* draco, bool normalized = false)
+            bool hasTexCoordOrColor;
+            using (var generator = new AttributeMapsGenerator(dracoMesh, m_DecodeFlags, attributeIdMap))
             {
-                bool foundAttribute = false;
-                for (var i = 0; i < count; i++)
-                {
-                    var type = GetVertexAttribute(attributeType, i);
-                    if (!type.HasValue)
-                    {
-#if UNITY_EDITOR
-
-                        // ReSharper disable once Unity.PerformanceCriticalCodeInvocation
-                        Debug.LogWarning($"Unknown attribute {attributeType}!");
-#endif
-                        continue;
-                    }
-                    if (attributeTypes.Contains(type.Value))
-                    {
-#if UNITY_EDITOR
-                        // ReSharper disable once Unity.PerformanceCriticalCodeInvocation
-                        Debug.LogWarning($"Multiple {type.Value} attributes!");
-#endif
-                        continue;
-                    }
-
-                    DracoAttribute* attribute = null;
-                    if (GetAttributeByType(draco, attributeType, i, &attribute))
-                    {
-                        var format = GetVertexAttributeFormat(
-                            (DataType)attribute->dataType, normalized);
-                        if (!format.HasValue) { continue; }
-                        var map = new AttributeMap(
-                            attribute,
-                            type.Value,
-                            format.Value,
-                            m_ConvertSpace && ConvertSpace(type.Value)
-                            );
-                        m_Attributes.Add(map);
-                        attributeTypes.Add(type.Value);
-                        foundAttribute = true;
-                    }
-                    else
-                    {
-                        // attributeType was not found
-                        break;
-                    }
-                }
-                return foundAttribute;
-            }
-
-            bool CreateAttributeMapById(VertexAttribute type, int id, DracoMesh* draco, out AttributeMap map, bool normalized = false)
-            {
-                map = null;
-                if (attributeTypes.Contains(type))
-                {
-#if UNITY_EDITOR
-                    // ReSharper disable once Unity.PerformanceCriticalCodeInvocation
-                    Debug.LogWarning($"Multiple {type} attributes!");
-#endif
-                    return false;
-                }
-
-                DracoAttribute* attribute;
-                if (GetAttributeByUniqueId(draco, id, &attribute))
-                {
-                    var format = GetVertexAttributeFormat((DataType)attribute->dataType, normalized);
-                    if (!format.HasValue) { return false; }
-
-                    map = new AttributeMap(attribute, type, format.Value, m_ConvertSpace && ConvertSpace(type));
-                    attributeTypes.Add(type);
-                    return true;
-                }
-                return false;
-            }
-
-            // Vertex attributes are added in the order defined here:
-            // https://docs.unity3d.com/2020.1/Documentation/ScriptReference/Rendering.VertexAttributeDescriptor.html
-            //
-            CreateAttributeMaps(AttributeType.Position, 1, dracoMesh);
-            var hasNormals = CreateAttributeMaps(AttributeType.Normal, 1, dracoMesh, true);
-            calculateNormals = !hasNormals && requireNormals;
-            if (calculateNormals)
-            {
-                calculateNormals = true;
-                m_Attributes.Add(new CalculatedAttributeMap(VertexAttribute.Normal, VertexAttributeFormat.Float32, 3, 4));
-            }
-            if (requireTangents)
-            {
-                m_Attributes.Add(new CalculatedAttributeMap(VertexAttribute.Tangent, VertexAttributeFormat.Float32, 4, 4));
-            }
-            var hasTexCoordOrColor = CreateAttributeMaps(AttributeType.Color, 1, dracoMesh, true);
-            hasTexCoordOrColor |= CreateAttributeMaps(AttributeType.TextureCoordinate, 8, dracoMesh, true);
-
-            var hasSkinning = false;
-            if (weightsAttributeId >= 0)
-            {
-                if (CreateAttributeMapById(VertexAttribute.BlendWeight, weightsAttributeId, dracoMesh, out var map, true))
-                {
-                    // BLEND-HACK: Don't add bone weights, as they won't exist after Mesh.SetBoneWeights
-                    // attributes.Add(map);
-                    m_BoneWeightMap = map;
-                    hasSkinning = true;
-                }
-            }
-            if (jointsAttributeId >= 0)
-            {
-                if (CreateAttributeMapById(VertexAttribute.BlendIndices, jointsAttributeId, dracoMesh, out var map))
-                {
-                    m_Attributes.Add(map);
-                    m_BoneIndexMap = map;
-                    hasSkinning = true;
-                }
+                m_Attributes = generator.GenerateAttributeMaps(
+                    out calculateNormals,
+                    out hasTexCoordOrColor,
+                    out m_BoneWeightMap,
+                    out m_BoneIndexMap
+                );
             }
 
             m_StreamStrides = new int[maxStreamCount];
             m_StreamMemberCount = new int[maxStreamCount];
             var streamIndex = 0;
 
+            var forceUnityVertexLayout = (m_DecodeFlags & DecodeFlags.ForceUnityVertexLayout) != 0;
             // skinning requires SkinnedMeshRenderer layout
-            forceUnityLayout |= hasSkinning;
+            forceUnityVertexLayout |= m_BoneWeightMap != null && m_BoneIndexMap != null;
 
             // On scenes with lots of small meshes the overhead of lots
             // of dedicated vertex buffers can have severe negative impact
             // on performance. Therefore we stick to Unity's layout (which
             // combines pos+normal+tangent in one stream) for smaller meshes.
             // See: https://github.com/atteneder/glTFast/issues/197
-            forceUnityLayout |= dracoMesh->numVertices <= ushort.MaxValue;
+            forceUnityVertexLayout |= dracoMesh->numVertices <= ushort.MaxValue;
 
             foreach (var attributeMap in m_Attributes)
             {
@@ -343,7 +179,7 @@ namespace Draco
                         break;
                     case VertexAttribute.Normal:
                     case VertexAttribute.Tangent:
-                        streamIndex = forceUnityLayout ? 0 : 1;
+                        streamIndex = forceUnityVertexLayout ? 0 : 1;
                         break;
                     case VertexAttribute.TexCoord0:
                     case VertexAttribute.TexCoord1:
@@ -412,7 +248,7 @@ namespace Draco
                 {
                     result = m_DracoDecodeResult,
                     dracoTempResources = m_DracoTempResources,
-                    flip = m_ConvertSpace,
+                    flip = (m_DecodeFlags & DecodeFlags.ConvertSpace) != 0,
                     dataType = m_Mesh.indexFormat == IndexFormat.UInt16 ? DataType.UInt16 : DataType.UInt32,
                     mesh = m_Mesh
                 }.Schedule(decodeVerticesJobHandle);
@@ -574,11 +410,7 @@ namespace Draco
 
         internal void CreateMesh(
             out bool calculateNormals,
-            bool requireNormals = false,
-            bool requireTangents = false,
-            int weightsAttributeId = -1,
-            int jointsAttributeId = -1,
-            bool forceUnityLayout = false
+            Dictionary<VertexAttribute, int> attributeIdMap
         )
         {
             Profiler.BeginSample("CreateMesh");
@@ -588,12 +420,8 @@ namespace Draco
 
             CalculateVertexParams(
                 dracoMesh,
-                requireNormals,
-                requireTangents,
-                weightsAttributeId,
-                jointsAttributeId,
-                out calculateNormals,
-                forceUnityLayout
+                attributeIdMap,
+                out calculateNormals
                 );
 
             Profiler.BeginSample("SetParameters");
@@ -660,7 +488,7 @@ namespace Draco
             const MeshUpdateFlags flags = DracoDecoder.defaultMeshUpdateFlags;
 
             m_Mesh.subMeshCount = 1;
-            var submeshDescriptor = new SubMeshDescriptor(
+            var subMeshDescriptor = new SubMeshDescriptor(
                 0,
                 m_IndicesCount,
                 m_IsPointCloud ? MeshTopology.Points : MeshTopology.Triangles
@@ -669,7 +497,7 @@ namespace Draco
                 vertexCount = m_Mesh.vertexCount,
                 bounds = bounds
             };
-            m_Mesh.SetSubMesh(0, submeshDescriptor, flags);
+            m_Mesh.SetSubMesh(0, subMeshDescriptor, flags);
             Profiler.EndSample(); // CreateUnityMesh.CreateMesh
             Profiler.EndSample();
 
@@ -895,6 +723,200 @@ namespace Draco
         [DllImport(dracoUnityLib)]
         static extern bool GetAttributeData(
             DracoMesh* mesh, DracoAttribute* attr, DracoData** data, bool flip, int componentStride);
+
+        class AttributeMapsGenerator : IDisposable
+        {
+            List<AttributeMapBase> m_Attributes = new List<AttributeMapBase>();
+            HashSet<VertexAttribute> m_AttributeTypes = new HashSet<VertexAttribute>();
+            Dictionary<VertexAttribute, int> m_AttributeIdMap;
+            DracoMesh* m_DracoMesh;
+            DecodeFlags m_DecodeFlags;
+
+            public AttributeMapsGenerator(
+                DracoMesh* dracoMesh,
+                DecodeFlags decodeFlags,
+                Dictionary<VertexAttribute, int> attributeIdMap
+                )
+            {
+                m_DracoMesh = dracoMesh;
+                m_DecodeFlags = decodeFlags;
+                m_AttributeIdMap = attributeIdMap;
+            }
+
+            public List<AttributeMapBase> GenerateAttributeMaps(
+                out bool calculateNormals,
+                out bool hasTexCoordOrColor,
+                out AttributeMap boneWeightMap,
+                out AttributeMap boneIndexMap
+            )
+            {
+                // Vertex attributes are added in the order defined here:
+                // https://docs.unity3d.com/2020.1/Documentation/ScriptReference/Rendering.VertexAttributeDescriptor.html
+
+                CreateAttributeMap(AttributeType.Position, VertexAttribute.Position);
+
+                var hasNormals = CreateAttributeMap(AttributeType.Normal, VertexAttribute.Normal, true);
+
+                calculateNormals = !hasNormals && (m_DecodeFlags & DecodeFlags.RequireNormalsAndTangents) != 0;
+                if (calculateNormals)
+                {
+                    calculateNormals = true;
+                    m_Attributes.Add(new CalculatedAttributeMap(VertexAttribute.Normal, VertexAttributeFormat.Float32, 3, 4));
+                }
+
+                if (TryCreateAttributeMapById(VertexAttribute.Tangent, out var tangentMap))
+                {
+                    m_Attributes.Add(tangentMap);
+                }
+                else if ((m_DecodeFlags & DecodeFlags.RequireTangents) != 0)
+                {
+                    m_Attributes.Add(new CalculatedAttributeMap(VertexAttribute.Tangent, VertexAttributeFormat.Float32, 4, 4));
+                }
+
+                hasTexCoordOrColor = CreateAttributeMapsByType(AttributeType.Color, 1, true);
+
+                if (TryCreateAttributeMapById(VertexAttribute.TexCoord0, out var uvMap))
+                {
+                    hasTexCoordOrColor = true;
+                    m_Attributes.Add(uvMap);
+                    for (var i = 1; i < 8; i++)
+                    {
+                        var att = VertexAttribute.TexCoord0 + i;
+                        if (TryCreateAttributeMapById(att, out uvMap))
+                        {
+                            m_Attributes.Add(uvMap);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    hasTexCoordOrColor |= CreateAttributeMapsByType(AttributeType.TextureCoordinate, 8, true);
+                }
+
+                boneIndexMap = null;
+                TryCreateAttributeMapById(VertexAttribute.BlendWeight, out boneWeightMap);
+                TryCreateAttributeMapById(VertexAttribute.BlendIndices, out boneIndexMap);
+
+                // BLEND-HACK: Notice that boneWeightMap and boneIndexMap are not added to the attributes as they'd get
+                // deleted upon calling Mesh.SetBoneWeights
+
+                return m_Attributes;
+            }
+
+            bool TryCreateAttributeMapById(VertexAttribute vertexAttribute, out AttributeMap attributeMap)
+            {
+                attributeMap = null;
+                return m_AttributeIdMap != null && m_AttributeIdMap.TryGetValue(vertexAttribute, out var attributeId)
+                    && CreateAttributeMapById(vertexAttribute, attributeId, out attributeMap);
+            }
+
+            bool CreateAttributeMap(AttributeType attributeType, VertexAttribute vertexAttribute, bool normalized = false)
+            {
+                if (TryCreateAttributeMapById(vertexAttribute, out var map))
+                {
+                    m_Attributes.Add(map);
+                    return true;
+                }
+
+                return CreateAttributeMapsByType(attributeType, 1, normalized);
+            }
+
+            bool CreateAttributeMapsByType(
+                AttributeType attributeType,
+                int count,
+                bool normalized = false
+                )
+            {
+                var foundAttribute = false;
+                for (var i = 0; i < count; i++)
+                {
+                    var type = GetVertexAttribute(attributeType, i);
+                    if (!type.HasValue)
+                    {
+#if UNITY_EDITOR
+                        // ReSharper disable once Unity.PerformanceCriticalCodeInvocation
+                        Debug.LogWarning($"Unknown attribute {attributeType}!");
+#endif
+                        continue;
+                    }
+                    if (WasAlreadyAdded(type.Value))
+                        return false;
+
+                    DracoAttribute* attribute = null;
+                    if (GetAttributeByType(m_DracoMesh, attributeType, i, &attribute))
+                    {
+                        var format = GetVertexAttributeFormat(
+                            (DataType)attribute->dataType, normalized);
+                        if (!format.HasValue) { continue; }
+                        var map = new AttributeMap(
+                            attribute,
+                            type.Value,
+                            format.Value,
+                            ConvertSpace(type.Value) && (m_DecodeFlags & DecodeFlags.ConvertSpace) != 0
+                        );
+                        m_Attributes.Add(map);
+                        m_AttributeTypes.Add(type.Value);
+                        foundAttribute = true;
+                    }
+                    else
+                    {
+                        // attributeType was not found
+                        break;
+                    }
+                }
+                return foundAttribute;
+            }
+
+            bool CreateAttributeMapById(VertexAttribute type, int id, out AttributeMap map, bool normalized = false)
+            {
+                map = null;
+                if (WasAlreadyAdded(type))
+                    return false;
+
+                DracoAttribute* attribute;
+                if (GetAttributeByUniqueId(m_DracoMesh, id, &attribute))
+                {
+                    var format = GetVertexAttributeFormat((DataType)attribute->dataType, normalized);
+                    if (!format.HasValue) { return false; }
+
+                    map = new AttributeMap(
+                        attribute,
+                        type,
+                        format.Value,
+                        ConvertSpace(type) && (m_DecodeFlags & DecodeFlags.ConvertSpace) != 0
+                    );
+                    m_AttributeTypes.Add(type);
+                    return true;
+                }
+                return false;
+            }
+
+            // ReSharper disable Unity.PerformanceAnalysis
+            bool WasAlreadyAdded(VertexAttribute attribute)
+            {
+                if (m_AttributeTypes.Contains(attribute))
+                {
+#if UNITY_EDITOR
+                    Debug.LogWarning($"Multiple {attribute} attributes!");
+#endif
+                    return true;
+                }
+
+                return false;
+            }
+
+            public void Dispose()
+            {
+                m_Attributes = null;
+                m_AttributeTypes = null;
+                m_AttributeIdMap = null;
+                m_DracoMesh = null;
+            }
+        }
 
         abstract class AttributeMapBase : IComparable<AttributeMapBase>, IDisposable
         {

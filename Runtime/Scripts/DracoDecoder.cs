@@ -8,7 +8,7 @@
 #endif
 
 using System;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Unity.Collections;
@@ -34,27 +34,39 @@ namespace Draco
         /// </summary>
         public const MeshUpdateFlags defaultMeshUpdateFlags = MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices | MeshUpdateFlags.DontNotifyMeshUsers | MeshUpdateFlags.DontResetBoneBounds;
 
+
         /// <summary>
         /// Decodes a Draco mesh.
         /// </summary>
-        /// <param name="mesh">MeshData used to create the mesh</param>
+        /// <param name="meshData">MeshData used to create the mesh</param>
         /// <param name="encodedData">Compressed Draco data</param>
-        /// <param name="convertSpace">If true, coordinate space is converted from right-hand (like in glTF) to left-hand (Unity).</param>
-        /// <param name="requireNormals">If draco does not contain normals and this is set to true, normals are calculated.</param>
-        /// <param name="requireTangents">If draco does not contain tangents and this is set to true, tangents and normals are calculated.</param>
-        /// <param name="weightsAttributeId">Draco attribute ID that contains bone weights (for skinning)</param>
-        /// <param name="jointsAttributeId">Draco attribute ID that contains bone joint indices (for skinning)</param>
-        /// <param name="forceUnityLayout">Enforces vertex buffer layout with highest compatibility. Enable this if you want to use blend shapes on the resulting mesh</param>
         /// <returns>A DecodeResult</returns>
         public static async Task<DecodeResult> DecodeMesh(
-            Mesh.MeshData mesh,
+            Mesh.MeshData meshData,
+            NativeSlice<byte> encodedData
+        )
+        {
+            return await DecodeMesh(meshData, encodedData, DecodeFlags.Default, null);
+        }
+
+        /// <inheritdoc cref="DecodeMesh(Mesh.MeshData,NativeSlice{byte})"/>
+        /// <param name="decodeFlags">Decode setting flags</param>
+        public static async Task<DecodeResult> DecodeMesh(
+            Mesh.MeshData meshData,
             NativeSlice<byte> encodedData,
-            bool convertSpace = true,
-            bool requireNormals = false,
-            bool requireTangents = false,
-            int weightsAttributeId = -1,
-            int jointsAttributeId = -1,
-            bool forceUnityLayout = false
+            DecodeFlags decodeFlags
+        )
+        {
+            return await DecodeMesh(meshData, encodedData, decodeFlags, null);
+        }
+
+        /// <inheritdoc cref="DecodeMesh(Mesh.MeshData,NativeSlice{byte},DecodeFlags)"/>
+        /// <param name="attributeIdMap">Attribute type to index map</param>
+        public static async Task<DecodeResult> DecodeMesh(
+            Mesh.MeshData meshData,
+            NativeSlice<byte> encodedData,
+            DecodeFlags decodeFlags,
+            Dictionary<VertexAttribute, int> attributeIdMap
         )
         {
             CertifySupportedPlatform(
@@ -64,29 +76,42 @@ namespace Draco
             );
             var encodedDataPtr = GetUnsafeReadOnlyIntPtr(encodedData);
             var result = await DecodeMesh(
-                mesh,
+                meshData,
                 encodedDataPtr,
                 encodedData.Length,
-                requireNormals,
-                requireTangents,
-                convertSpace,
-                weightsAttributeId,
-                jointsAttributeId,
-                forceUnityLayout
+                decodeFlags,
+                attributeIdMap
             );
             return result;
         }
 
-        /// <inheritdoc cref="DecodeMesh(Mesh.MeshData,NativeSlice{byte},bool,bool,bool,int,int,bool)"/>
+        /// <inheritdoc cref="DecodeMesh(Mesh.MeshData,NativeSlice{byte})"/>
         public static async Task<DecodeResult> DecodeMesh(
-            Mesh.MeshData mesh,
+            Mesh.MeshData meshData,
+            byte[] encodedData
+        )
+        {
+            return await DecodeMesh(meshData, encodedData, DecodeFlags.Default, null);
+        }
+
+        /// <inheritdoc cref="DecodeMesh(Mesh.MeshData,byte[])"/>
+        /// <param name="decodeFlags">Decode setting flags</param>
+        public static async Task<DecodeResult> DecodeMesh(
+            Mesh.MeshData meshData,
             byte[] encodedData,
-            bool convertSpace = true,
-            bool requireNormals = false,
-            bool requireTangents = false,
-            int weightsAttributeId = -1,
-            int jointsAttributeId = -1,
-            bool forceUnityLayout = false
+            DecodeFlags decodeFlags
+        )
+        {
+            return await DecodeMesh(meshData, encodedData, decodeFlags, null);
+        }
+
+        /// <inheritdoc cref="DecodeMesh(Mesh.MeshData,byte[],DecodeFlags)"/>
+        /// <param name="attributeIdMap">Attribute type to index map</param>
+        public static async Task<DecodeResult> DecodeMesh(
+            Mesh.MeshData meshData,
+            byte[] encodedData,
+            DecodeFlags decodeFlags,
+            Dictionary<VertexAttribute, int> attributeIdMap
             )
         {
             CertifySupportedPlatform(
@@ -96,15 +121,11 @@ namespace Draco
             );
             var encodedDataPtr = PinGCArrayAndGetDataAddress(encodedData, out var gcHandle);
             var result = await DecodeMesh(
-                mesh,
+                meshData,
                 encodedDataPtr,
                 encodedData.Length,
-                requireNormals,
-                requireTangents,
-                convertSpace,
-                weightsAttributeId,
-                jointsAttributeId,
-                forceUnityLayout
+                decodeFlags,
+                attributeIdMap
                 );
             UnsafeUtility.ReleaseGCObject(gcHandle);
             return result;
@@ -112,25 +133,36 @@ namespace Draco
 
         /// <summary>
         /// Decodes a Draco mesh.
-        /// Consider using <see cref="DecodeMesh(Mesh.MeshData,NativeSlice{byte},bool,bool,bool,int,int,bool)"/>
-        /// for increased performance.
         /// </summary>
+        /// <remarks>
+        /// Consider using <see cref="DecodeMesh(Mesh.MeshData,NativeSlice{byte})"/>
+        /// for increased performance.
+        /// </remarks>
         /// <param name="encodedData">Compressed Draco data</param>
-        /// <param name="convertSpace">If true, coordinate space is converted from right-hand (like in glTF) to left-hand (Unity).</param>
-        /// <param name="requireNormals">If draco does not contain normals and this is set to true, normals are calculated.</param>
-        /// <param name="requireTangents">If draco does not contain tangents and this is set to true, tangents and normals are calculated.</param>
-        /// <param name="weightsAttributeId">Draco attribute ID that contains bone weights (for skinning)</param>
-        /// <param name="jointsAttributeId">Draco attribute ID that contains bone joint indices (for skinning)</param>
-        /// <param name="forceUnityLayout">Enforces vertex buffer layout with highest compatibility. Enable this if you want to use blend shapes on the resulting mesh</param>
         /// <returns>Unity Mesh or null in case of errors</returns>
         public static async Task<Mesh> DecodeMesh(
+            NativeSlice<byte> encodedData
+        )
+        {
+            return await DecodeMesh(encodedData, DecodeFlags.Default, null);
+        }
+
+        /// <inheritdoc cref="DecodeMesh(NativeSlice{byte})"/>
+        /// <param name="decodeFlags">Decode setting flags</param>
+        public static async Task<Mesh> DecodeMesh(
             NativeSlice<byte> encodedData,
-            bool convertSpace = true,
-            bool requireNormals = false,
-            bool requireTangents = false,
-            int weightsAttributeId = -1,
-            int jointsAttributeId = -1,
-            bool forceUnityLayout = false
+            DecodeFlags decodeFlags
+        )
+        {
+            return await DecodeMesh(encodedData, decodeFlags, null);
+        }
+
+        /// <inheritdoc cref="DecodeMesh(NativeSlice{byte},DecodeFlags)"/>
+        /// <param name="attributeIdMap">Attribute type to index map</param>
+        public static async Task<Mesh> DecodeMesh(
+            NativeSlice<byte> encodedData,
+            DecodeFlags decodeFlags,
+            Dictionary<VertexAttribute, int> attributeIdMap
             )
         {
             CertifySupportedPlatform(
@@ -145,12 +177,8 @@ namespace Draco
                 mesh,
                 encodedDataPtr,
                 encodedData.Length,
-                requireNormals,
-                requireTangents,
-                convertSpace,
-                weightsAttributeId,
-                jointsAttributeId,
-                forceUnityLayout
+                decodeFlags,
+                attributeIdMap
                 );
             if (!result.success)
             {
@@ -171,7 +199,7 @@ namespace Draco
                 {
                     unityMesh.RecalculateNormals();
                 }
-                if (requireTangents)
+                if ((decodeFlags & DecodeFlags.RequireTangents) != 0)
                 {
                     unityMesh.RecalculateTangents();
                 }
@@ -179,15 +207,28 @@ namespace Draco
             return unityMesh;
         }
 
-        /// <inheritdoc cref="DecodeMesh(NativeSlice{byte},bool,bool,bool,int,int,bool)"/>
+        /// <inheritdoc cref="DecodeMesh(NativeSlice{byte})"/>
+        public static async Task<Mesh> DecodeMesh(
+            byte[] encodedData
+        )
+        {
+            return await DecodeMesh(encodedData, DecodeFlags.Default, null);
+        }
+
+        /// <inheritdoc cref="DecodeMesh(NativeSlice{byte},DecodeFlags)"/>
         public static async Task<Mesh> DecodeMesh(
             byte[] encodedData,
-            bool convertSpace = true,
-            bool requireNormals = false,
-            bool requireTangents = false,
-            int weightsAttributeId = -1,
-            int jointsAttributeId = -1,
-            bool forceUnityLayout = false
+            DecodeFlags decodeFlags
+        )
+        {
+            return await DecodeMesh(encodedData, decodeFlags, null);
+        }
+
+        /// <inheritdoc cref="DecodeMesh(NativeSlice{byte},DecodeFlags,Dictionary{AttributeType,int})"/>
+        public static async Task<Mesh> DecodeMesh(
+            byte[] encodedData,
+            DecodeFlags decodeFlags,
+            Dictionary<VertexAttribute, int> attributeIdMap
         )
         {
             CertifySupportedPlatform(
@@ -197,23 +238,44 @@ namespace Draco
             );
             return await DecodeMeshInternal(
                 encodedData,
-                convertSpace,
-                requireNormals,
-                requireTangents,
-                weightsAttributeId,
-                jointsAttributeId,
-                forceUnityLayout
+                decodeFlags,
+                attributeIdMap
             );
+        }
+
+        /// <summary>
+        /// Creates an attribute type to index map from indices for bone weights and joints.
+        /// </summary>
+        /// <param name="weightsAttributeId">Bone weights attribute index.</param>
+        /// <param name="jointsAttributeId">Bone joints attribute index.</param>
+        /// <returns></returns>
+        public static Dictionary<VertexAttribute, int> CreateAttributeIdMap(
+            int weightsAttributeId,
+            int jointsAttributeId
+            )
+        {
+            Dictionary<VertexAttribute, int> result = null;
+            if (weightsAttributeId >= 0)
+            {
+                result = new Dictionary<VertexAttribute, int>
+                {
+                    [VertexAttribute.BlendWeight] = weightsAttributeId
+                };
+            }
+
+            if (jointsAttributeId >= 0)
+            {
+                result ??= new Dictionary<VertexAttribute, int>();
+                result[VertexAttribute.BlendIndices] = jointsAttributeId;
+            }
+
+            return result;
         }
 
         internal static async Task<Mesh> DecodeMeshInternal(
             byte[] encodedData,
-            bool convertSpace = true,
-            bool requireNormals = false,
-            bool requireTangents = false,
-            int weightsAttributeId = -1,
-            int jointsAttributeId = -1,
-            bool forceUnityLayout = false
+            DecodeFlags decodeFlags,
+            Dictionary<VertexAttribute, int> attributeIdMap
 #if UNITY_EDITOR
             ,bool sync = false
 #endif
@@ -226,12 +288,8 @@ namespace Draco
                 mesh,
                 encodedDataPtr,
                 encodedData.Length,
-                requireNormals,
-                requireTangents,
-                convertSpace,
-                weightsAttributeId,
-                jointsAttributeId,
-                forceUnityLayout
+                decodeFlags,
+                attributeIdMap
 #if UNITY_EDITOR
                 ,sync
 #endif
@@ -249,7 +307,7 @@ namespace Draco
             {
                 unityMesh.RecalculateNormals();
             }
-            if (requireTangents)
+            if ((decodeFlags & DecodeFlags.RequireTangents) != 0)
             {
                 unityMesh.RecalculateTangents();
             }
@@ -258,21 +316,17 @@ namespace Draco
 
 
         static async Task<DecodeResult> DecodeMesh(
-            Mesh.MeshData mesh,
+            Mesh.MeshData meshData,
             IntPtr encodedData,
             int size,
-            bool requireNormals,
-            bool requireTangents,
-            bool convertSpace = true,
-            int weightsAttributeId = -1,
-            int jointsAttributeId = -1,
-            bool forceUnityLayout = false
+            DecodeFlags decodeFlags,
+            Dictionary<VertexAttribute, int> attributeIdMap
 #if UNITY_EDITOR
             ,bool sync = false
 #endif
         )
         {
-            var dracoNative = new DracoNative(mesh, convertSpace);
+            var dracoNative = new DracoNative(meshData, decodeFlags);
             var result = new DecodeResult();
 
 #if UNITY_EDITOR
@@ -290,16 +344,9 @@ namespace Draco
                 return result;
             }
 
-            // Normals are required for calculating tangents
-            requireNormals |= requireTangents;
-
             dracoNative.CreateMesh(
                 out result.calculateNormals,
-                requireNormals,
-                requireTangents,
-                weightsAttributeId,
-                jointsAttributeId,
-                forceUnityLayout
+                attributeIdMap
                 );
 #if UNITY_EDITOR
             if (sync) {

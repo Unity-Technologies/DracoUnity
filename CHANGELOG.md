@@ -16,8 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - *Draco Decoding*. Demonstrates how to decode Draco data at runtime.
   - *Draco Encoding*. Demonstrates how to encode Draco data at runtime.
   - *Scene/GameObject Encoding/Decoding via Menu*. Encode Meshes, GameObjects or entire Scenes via the Tools and Assets menu and have them decoded when the scene loads.
+- Support for decoding generic Draco attributes into arbitrary Unity vertex attributes (e.g. tangents) via [`DecodeMesh`](xref:Draco.DracoDecoder.DecodeMesh*)'s `attributeIdMap` parameter.
 
 ### Changed
+- Decoding API was refactored and harmonized with encoding. The main entry point now is [`DracoDecoder.DecodeMesh`](xref:Draco.DracoDecoder.DecodeMesh*).
+  - [`decodeFlags`](xref:Draco.DecodeFlags) parameter encapsulates decode related settings.
+  - `attributeIdMap` parameter allows Draco attribute identifier to Unity vertex attribute assignment.
+- Encoding API was refactored and now utilizes [`QuantizationSettings`](xref:Draco.Encode.QuantizationSettings) and [`SpeedSettings`](xref:Draco.Encode.SpeedSettings).
 - Much faster encoding due to the use of the C# Job System (threads)
 - Faster encoding due to avoiding a full memory copy of the result
 - All encoding methods are async now
@@ -32,6 +37,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed assembly definition `DracoEditor` to `Draco.Editor`
 - Renamed assembly definition `DracoRuntimeTests` to `Draco.Tests`
 - CI maintenance
+
+### Deprecated
+
+- `DracoMeshLoader` (in favor of [`DracoDecoder`](xref:Draco.DracoDecoder))
+- `DracoEncoder.EncodeMesh` overloads that have many individual settings parameters instead of [`QuantizationSettings`](xref:Draco.Encode.QuantizationSettings)/[`SpeedSettings`](xref:Draco.Encode.SpeedSettings).
 
 ### Removed
 - Obsolete console error about downgrading package for certain Unity versions

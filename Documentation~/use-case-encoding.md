@@ -16,9 +16,11 @@ Here's an example that encodes a [Mesh](xref:UnityEngine.Mesh) and saves the res
 
 ### Optimize and tweak
 
+[EncodeMesh](xref:Draco.Encode.DracoEncoder.EncodeMesh*)'s optional [`quantization`](xref:Draco.Encode.QuantizationSettings) and [speed](xref:Draco.Encode.SpeedSettings) parameters offers many ways to customize the encoding process.
+
 #### Speed parameters
 
-The parameters `encodingSpeed` and `decodingSpeed` allow you to tweak the tradeoff between resulting data size in bytes and encoding/decoding speed by turning on/off different compression features. In general, the lowest setting, 0, will have the most compression but worst speed. 10 will have the least compression, but best speed.
+The settings [`encodingSpeed`](xref:Draco.Encode.SpeedSettings.encodingSpeed) and [`decodingSpeed`](xref:Draco.Encode.SpeedSettings.decodingSpeed) allow you to tweak the tradeoff between resulting data size in bytes and encoding/decoding speed by turning on/off different compression features. In general, the lowest setting, 0, will have the most compression but worst speed. 10 will have the least compression, but best speed.
 
 #### Quantization settings
 
@@ -28,15 +30,15 @@ In general, the more you quantize your attributes the better compression rate yo
 
 Quantization is specified per attribute type:
 
-- Position (`positionQuantization` parameter)
-- Normal (`normalQuantization` parameter)
-- Texture Coordinate (`texCoordQuantization` parameter)
-- Color (`colorQuantization` parameter)
-- Generic (`genericQuantization` parameter)
+- Position ([`positionQuantization`](xref:Draco.Encode.QuantizationSettings.positionQuantization) setting)
+- Normal ([`normalQuantization`](xref:Draco.Encode.QuantizationSettings.normalQuantization) setting)
+- Texture Coordinate ([`texCoordQuantization`](xref:Draco.Encode.QuantizationSettings.texCoordQuantization) setting)
+- Color ([`colorQuantization`](xref:Draco.Encode.QuantizationSettings.colorQuantization) setting)
+- Generic ([`genericQuantization`](xref:Draco.Encode.QuantizationSettings.genericQuantization) setting)
 
 ##### Position Quantization
 
-Instead of providing position quantization in bits you can also provide the `worldScale`, which is the global scale of the mesh in your scene, and a `precision`, which is the desired minimum precision in world units. The final position quantization will be calculated from the mesh's [bounds](xref:UnityEngine.Mesh.bounds) and those two parameters.
+Alternatively the ideal position quantization can be calculated from the mesh's size, its size/scale in the world and the desired precision. Have a look at [QuantizationSettings.FromWorldSize](xref:Draco.Encode.QuantizationSettings.FromWorldSize*) for details.
 
 ### Encode using the advanced Mesh API
 

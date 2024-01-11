@@ -10,7 +10,11 @@ Support for building to WebGL is provided by a Unity version specific WebGL sub-
 
 Assembly definition `DracoEditor` was renamed to `Draco.Editor`, so make sure you update your references.
 
-[`DracoMeshLoader`](xref:Draco.DracoMeshLoader) is now obsolete. Please use the static [`Draco.DracoDecoder`](xref:Draco.DracoDecoder) and its methods for decoding Draco data from now on (you don't need to create an instance anymore).
+### API changes
+
+[DracoMeshLoader](xref:Draco.DracoMeshLoader) is now obsolete. Please use the [DecodeMesh](xref:Draco.DracoDecoder.DecodeMesh*) methods for decoding Draco data from now on. Instead of many individual parameters, [`decodeFlags`](xref:Draco.DecodeFlags) and `attributeIdMap` now encapsulate all settings to fine-tune decoding. See [Attribute assignment via Draco identifier](use-case-decoding.md#attribute-assignment-via-draco-identifier) for details about attribute assignment via `attributeIdMap`.
+
+In similar fashion, instead of many individual encode settings parameters, [QuantizationSettings](xref:Draco.Encode.QuantizationSettings) and [SpeedSettings](xref:Draco.Encode.SpeedSettings) can be passed to [EncodeMesh](xref:Draco.Encode.DracoEncoder.EncodeMesh*). The existing overloads have been marked obsolete.
 
 ### Draco Tools Menu
 

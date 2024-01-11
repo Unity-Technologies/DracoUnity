@@ -94,7 +94,11 @@ namespace Draco.Sample.SceneEncodeDecode.Editor
                 if (dracoFilesMissing)
                 {
                     var scale = meshFilter.transform.localToWorldMatrix.lossyScale;
-                    var dracoData = await DracoEncoder.EncodeMesh(mesh, scale, .0001f);
+                    var dracoData = await DracoEncoder.EncodeMesh(
+                        mesh,
+                        QuantizationSettings.FromWorldSize(mesh.bounds, scale, .0001f),
+                        SpeedSettings.Default
+                        );
                     if (dracoData != null && dracoData.Length > 0)
                     {
                         var projectPath = Directory.GetParent(Application.dataPath);

@@ -31,7 +31,7 @@ namespace Draco.Sample.SceneEncodeDecode
         /// <returns>A <see cref="Task"/></returns>
         public async Task Decode()
         {
-            var mesh = await DracoDecoder.DecodeMesh(dracoAsset.bytes, false);
+            var mesh = await DracoDecoder.DecodeMesh(dracoAsset.bytes);
             mesh.bounds = bounds;
 #if DEBUG
             mesh.name = dracoAsset.name;

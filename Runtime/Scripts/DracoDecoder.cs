@@ -46,26 +46,26 @@ namespace Draco
             NativeSlice<byte> encodedData
         )
         {
-            return await DecodeMesh(meshData, encodedData, DecodeFlags.Default, null);
+            return await DecodeMesh(meshData, encodedData, DecodeSettings.Default, null);
         }
 
         /// <inheritdoc cref="DecodeMesh(Mesh.MeshData,NativeSlice{byte})"/>
-        /// <param name="decodeFlags">Decode setting flags</param>
+        /// <param name="decodeSettings">Decode setting flags</param>
         public static async Task<DecodeResult> DecodeMesh(
             Mesh.MeshData meshData,
             NativeSlice<byte> encodedData,
-            DecodeFlags decodeFlags
+            DecodeSettings decodeSettings
         )
         {
-            return await DecodeMesh(meshData, encodedData, decodeFlags, null);
+            return await DecodeMesh(meshData, encodedData, decodeSettings, null);
         }
 
-        /// <inheritdoc cref="DecodeMesh(Mesh.MeshData,NativeSlice{byte},DecodeFlags)"/>
+        /// <inheritdoc cref="DecodeMesh(Mesh.MeshData,NativeSlice{byte},DecodeSettings)"/>
         /// <param name="attributeIdMap">Attribute type to index map</param>
         public static async Task<DecodeResult> DecodeMesh(
             Mesh.MeshData meshData,
             NativeSlice<byte> encodedData,
-            DecodeFlags decodeFlags,
+            DecodeSettings decodeSettings,
             Dictionary<VertexAttribute, int> attributeIdMap
         )
         {
@@ -79,7 +79,7 @@ namespace Draco
                 meshData,
                 encodedDataPtr,
                 encodedData.Length,
-                decodeFlags,
+                decodeSettings,
                 attributeIdMap
             );
             return result;
@@ -91,26 +91,26 @@ namespace Draco
             byte[] encodedData
         )
         {
-            return await DecodeMesh(meshData, encodedData, DecodeFlags.Default, null);
+            return await DecodeMesh(meshData, encodedData, DecodeSettings.Default, null);
         }
 
         /// <inheritdoc cref="DecodeMesh(Mesh.MeshData,byte[])"/>
-        /// <param name="decodeFlags">Decode setting flags</param>
+        /// <param name="decodeSettings">Decode setting flags</param>
         public static async Task<DecodeResult> DecodeMesh(
             Mesh.MeshData meshData,
             byte[] encodedData,
-            DecodeFlags decodeFlags
+            DecodeSettings decodeSettings
         )
         {
-            return await DecodeMesh(meshData, encodedData, decodeFlags, null);
+            return await DecodeMesh(meshData, encodedData, decodeSettings, null);
         }
 
-        /// <inheritdoc cref="DecodeMesh(Mesh.MeshData,byte[],DecodeFlags)"/>
+        /// <inheritdoc cref="DecodeMesh(Mesh.MeshData,byte[],DecodeSettings)"/>
         /// <param name="attributeIdMap">Attribute type to index map</param>
         public static async Task<DecodeResult> DecodeMesh(
             Mesh.MeshData meshData,
             byte[] encodedData,
-            DecodeFlags decodeFlags,
+            DecodeSettings decodeSettings,
             Dictionary<VertexAttribute, int> attributeIdMap
             )
         {
@@ -124,7 +124,7 @@ namespace Draco
                 meshData,
                 encodedDataPtr,
                 encodedData.Length,
-                decodeFlags,
+                decodeSettings,
                 attributeIdMap
                 );
             UnsafeUtility.ReleaseGCObject(gcHandle);
@@ -144,24 +144,24 @@ namespace Draco
             NativeSlice<byte> encodedData
         )
         {
-            return await DecodeMesh(encodedData, DecodeFlags.Default, null);
+            return await DecodeMesh(encodedData, DecodeSettings.Default, null);
         }
 
         /// <inheritdoc cref="DecodeMesh(NativeSlice{byte})"/>
-        /// <param name="decodeFlags">Decode setting flags</param>
+        /// <param name="decodeSettings">Decode setting flags</param>
         public static async Task<Mesh> DecodeMesh(
             NativeSlice<byte> encodedData,
-            DecodeFlags decodeFlags
+            DecodeSettings decodeSettings
         )
         {
-            return await DecodeMesh(encodedData, decodeFlags, null);
+            return await DecodeMesh(encodedData, decodeSettings, null);
         }
 
-        /// <inheritdoc cref="DecodeMesh(NativeSlice{byte},DecodeFlags)"/>
+        /// <inheritdoc cref="DecodeMesh(NativeSlice{byte},DecodeSettings)"/>
         /// <param name="attributeIdMap">Attribute type to index map</param>
         public static async Task<Mesh> DecodeMesh(
             NativeSlice<byte> encodedData,
-            DecodeFlags decodeFlags,
+            DecodeSettings decodeSettings,
             Dictionary<VertexAttribute, int> attributeIdMap
             )
         {
@@ -177,7 +177,7 @@ namespace Draco
                 mesh,
                 encodedDataPtr,
                 encodedData.Length,
-                decodeFlags,
+                decodeSettings,
                 attributeIdMap
                 );
             if (!result.success)
@@ -199,7 +199,7 @@ namespace Draco
                 {
                     unityMesh.RecalculateNormals();
                 }
-                if ((decodeFlags & DecodeFlags.RequireTangents) != 0)
+                if ((decodeSettings & DecodeSettings.RequireTangents) != 0)
                 {
                     unityMesh.RecalculateTangents();
                 }
@@ -212,22 +212,22 @@ namespace Draco
             byte[] encodedData
         )
         {
-            return await DecodeMesh(encodedData, DecodeFlags.Default, null);
+            return await DecodeMesh(encodedData, DecodeSettings.Default, null);
         }
 
-        /// <inheritdoc cref="DecodeMesh(NativeSlice{byte},DecodeFlags)"/>
+        /// <inheritdoc cref="DecodeMesh(NativeSlice{byte},DecodeSettings)"/>
         public static async Task<Mesh> DecodeMesh(
             byte[] encodedData,
-            DecodeFlags decodeFlags
+            DecodeSettings decodeSettings
         )
         {
-            return await DecodeMesh(encodedData, decodeFlags, null);
+            return await DecodeMesh(encodedData, decodeSettings, null);
         }
 
-        /// <inheritdoc cref="DecodeMesh(NativeSlice{byte},DecodeFlags,Dictionary{AttributeType,int})"/>
+        /// <inheritdoc cref="DecodeMesh(NativeSlice{byte},DecodeSettings,Dictionary{AttributeType,int})"/>
         public static async Task<Mesh> DecodeMesh(
             byte[] encodedData,
-            DecodeFlags decodeFlags,
+            DecodeSettings decodeSettings,
             Dictionary<VertexAttribute, int> attributeIdMap
         )
         {
@@ -238,7 +238,7 @@ namespace Draco
             );
             return await DecodeMeshInternal(
                 encodedData,
-                decodeFlags,
+                decodeSettings,
                 attributeIdMap
             );
         }
@@ -274,7 +274,7 @@ namespace Draco
 
         internal static async Task<Mesh> DecodeMeshInternal(
             byte[] encodedData,
-            DecodeFlags decodeFlags,
+            DecodeSettings decodeSettings,
             Dictionary<VertexAttribute, int> attributeIdMap
 #if UNITY_EDITOR
             ,bool sync = false
@@ -288,7 +288,7 @@ namespace Draco
                 mesh,
                 encodedDataPtr,
                 encodedData.Length,
-                decodeFlags,
+                decodeSettings,
                 attributeIdMap
 #if UNITY_EDITOR
                 ,sync
@@ -307,7 +307,7 @@ namespace Draco
             {
                 unityMesh.RecalculateNormals();
             }
-            if ((decodeFlags & DecodeFlags.RequireTangents) != 0)
+            if ((decodeSettings & DecodeSettings.RequireTangents) != 0)
             {
                 unityMesh.RecalculateTangents();
             }
@@ -319,15 +319,14 @@ namespace Draco
             Mesh.MeshData meshData,
             IntPtr encodedData,
             int size,
-            DecodeFlags decodeFlags,
+            DecodeSettings decodeSettings,
             Dictionary<VertexAttribute, int> attributeIdMap
 #if UNITY_EDITOR
             ,bool sync = false
 #endif
         )
         {
-            var dracoNative = new DracoNative(meshData, decodeFlags);
-            var result = new DecodeResult();
+            var dracoNative = new DracoNative(meshData, decodeSettings);
 
 #if UNITY_EDITOR
             if (sync) {
@@ -341,11 +340,11 @@ namespace Draco
             if (dracoNative.ErrorOccured())
             {
                 dracoNative.DisposeDracoMesh();
-                return result;
+                return new DecodeResult();
             }
 
             dracoNative.CreateMesh(
-                out result.calculateNormals,
+                out var calculateNormals,
                 attributeIdMap
                 );
 #if UNITY_EDITOR
@@ -361,17 +360,23 @@ namespace Draco
             dracoNative.DisposeDracoMesh();
             if (error)
             {
-                return result;
+                return new DecodeResult();
             }
 
-            result.bounds = dracoNative.CreateBounds();
-            result.success = dracoNative.PopulateMeshData(result.bounds);
-            if (result.success && dracoNative.hasBoneWeightData)
+            var bounds = dracoNative.CreateBounds();
+            var success = dracoNative.PopulateMeshData(bounds);
+            BoneWeightData boneWeightData = null;
+            if (success && dracoNative.hasBoneWeightData)
             {
-                result.boneWeightData = new BoneWeightData(dracoNative.bonesPerVertex, dracoNative.boneWeights);
+                boneWeightData = new BoneWeightData(dracoNative.bonesPerVertex, dracoNative.boneWeights);
                 dracoNative.DisposeBoneWeightData();
             }
-            return result;
+            return new DecodeResult(
+                success,
+                bounds,
+                calculateNormals,
+                boneWeightData
+                );
         }
 
         static async Task WaitForJobHandle(JobHandle jobHandle)

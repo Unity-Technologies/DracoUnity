@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Decoding API was refactored and harmonized with encoding. The main entry point now is [`DracoDecoder.DecodeMesh`](xref:Draco.DracoDecoder.DecodeMesh*).
-  - [`decodeFlags`](xref:Draco.DecodeFlags) parameter encapsulates decode related settings.
+  - [`decodeSettings`](xref:Draco.DecodeSettings) parameter encapsulates decode related settings.
   - `attributeIdMap` parameter allows Draco attribute identifier to Unity vertex attribute assignment.
 - Encoding API was refactored and now utilizes [`QuantizationSettings`](xref:Draco.Encode.QuantizationSettings) and [`SpeedSettings`](xref:Draco.Encode.SpeedSettings).
 - Much faster encoding due to the use of the C# Job System (threads)

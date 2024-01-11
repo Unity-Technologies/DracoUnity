@@ -18,7 +18,7 @@ namespace Draco
         /// <summary>
         /// If true, coordinate space is converted from right-hand (like in glTF) to left-hand (Unity).
         /// </summary>
-        bool m_ConvertSpace;
+        readonly bool m_ConvertSpace;
 
         /// <summary>
         /// Create a DracoMeshLoader instance which let's you decode Draco data.
@@ -52,19 +52,9 @@ namespace Draco
         {
             return await DracoDecoder.DecodeMesh(
                 encodedData,
-                CreateDecodeFlags(requireNormals, requireTangents, forceUnityLayout),
+                CreateDecodeSettings(requireNormals, requireTangents, forceUnityLayout),
                 DracoDecoder.CreateAttributeIdMap(weightsAttributeId, jointsAttributeId)
                 );
-        }
-
-        DecodeFlags CreateDecodeFlags(bool requireNormals, bool requireTangents, bool forceUnityLayout)
-        {
-            var flags = DecodeFlags.None;
-            if (requireNormals) flags |= DecodeFlags.RequireNormals;
-            if (requireTangents) flags |= DecodeFlags.RequireTangents;
-            if (forceUnityLayout) flags |= DecodeFlags.ForceUnityVertexLayout;
-            if (m_ConvertSpace) flags |= DecodeFlags.ConvertSpace;
-            return flags;
         }
 
         /// <summary>
@@ -90,7 +80,7 @@ namespace Draco
         {
             return await DracoDecoder.DecodeMesh(
                 encodedData,
-                CreateDecodeFlags(requireNormals, requireTangents, forceUnityLayout),
+                CreateDecodeSettings(requireNormals, requireTangents, forceUnityLayout),
                 DracoDecoder.CreateAttributeIdMap(weightsAttributeId, jointsAttributeId)
             );
         }
@@ -121,7 +111,7 @@ namespace Draco
             return await DracoDecoder.DecodeMesh(
                 mesh,
                 encodedData,
-                CreateDecodeFlags(requireNormals, requireTangents, forceUnityLayout),
+                CreateDecodeSettings(requireNormals, requireTangents, forceUnityLayout),
                 DracoDecoder.CreateAttributeIdMap(weightsAttributeId, jointsAttributeId)
             );
         }
@@ -152,9 +142,19 @@ namespace Draco
             return await DracoDecoder.DecodeMesh(
                 mesh,
                 encodedData,
-                CreateDecodeFlags(requireNormals, requireTangents, forceUnityLayout),
+                CreateDecodeSettings(requireNormals, requireTangents, forceUnityLayout),
                 DracoDecoder.CreateAttributeIdMap(weightsAttributeId, jointsAttributeId)
             );
+        }
+
+        DecodeSettings CreateDecodeSettings(bool requireNormals, bool requireTangents, bool forceUnityLayout)
+        {
+            var flags = DecodeSettings.None;
+            if (requireNormals) flags |= DecodeSettings.RequireNormals;
+            if (requireTangents) flags |= DecodeSettings.RequireTangents;
+            if (forceUnityLayout) flags |= DecodeSettings.ForceUnityVertexLayout;
+            if (m_ConvertSpace) flags |= DecodeSettings.ConvertSpace;
+            return flags;
         }
     }
 }

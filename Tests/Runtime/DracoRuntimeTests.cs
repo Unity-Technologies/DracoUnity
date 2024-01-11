@@ -284,12 +284,12 @@ namespace Draco.Tests
 
             for (var i = 0; i < quantity; i++)
             {
-                var decodeFlags = requireNormals ? DecodeFlags.RequireNormals : 0;
-                decodeFlags |= requireTangents ? DecodeFlags.RequireTangents : 0;
+                var decodeSettings = requireNormals ? DecodeSettings.RequireNormals : 0;
+                decodeSettings |= requireTangents ? DecodeSettings.RequireTangents : 0;
                 var task = DracoDecoder.DecodeMesh(
                     meshDataArray[i],
                     data,
-                    decodeFlags
+                    decodeSettings
                     );
                 tasks.Add(task);
             }
@@ -332,11 +332,11 @@ namespace Draco.Tests
 
             for (var i = 0; i < quantity; i++)
             {
-                var decodeFlags = requireNormals ? DecodeFlags.RequireNormals : 0;
-                decodeFlags |= requireTangents ? DecodeFlags.RequireTangents : 0;
+                var decodeSettings = requireNormals ? DecodeSettings.RequireNormals : 0;
+                decodeSettings |= requireTangents ? DecodeSettings.RequireTangents : 0;
                 var task = DracoDecoder.DecodeMesh(
                     data,
-                    decodeFlags
+                    decodeSettings
                     );
                 tasks.Add(task);
             }
@@ -437,7 +437,7 @@ namespace Draco.Tests
         [UnityTest]
         public IEnumerator DecodeCube()
         {
-            var task = DracoDecoder.DecodeMesh(k_CubeDracoData, DecodeFlags.Default);
+            var task = DracoDecoder.DecodeMesh(k_CubeDracoData, DecodeSettings.Default);
 
             while (!task.IsCompleted)
             {
@@ -463,7 +463,7 @@ namespace Draco.Tests
                 [VertexAttribute.TexCoord1] = 3,
             };
 
-            var task = DracoDecoder.DecodeMesh(k_CubeDracoData, DecodeFlags.Default, attributeIdMap);
+            var task = DracoDecoder.DecodeMesh(k_CubeDracoData, DecodeSettings.Default, attributeIdMap);
 
             while (!task.IsCompleted)
             {
@@ -485,7 +485,7 @@ namespace Draco.Tests
                 [VertexAttribute.TexCoord0] = 3,
             };
 
-            var task = DracoDecoder.DecodeMesh(k_CubeDracoData, DecodeFlags.Default, attributeIdMap);
+            var task = DracoDecoder.DecodeMesh(k_CubeDracoData, DecodeSettings.Default, attributeIdMap);
 
             while (!task.IsCompleted)
             {

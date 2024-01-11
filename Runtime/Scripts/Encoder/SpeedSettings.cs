@@ -30,7 +30,7 @@ namespace Draco.Encode
         /// (0 = slowest speed, but the best compression; 10 = fastest, but the worst compression)
         /// </summary>
         public readonly int encodingSpeed;
-        
+
         /// <summary>
         /// Decoding speed
         /// (0 = slowest speed, but the best compression; 10 = fastest, but the worst compression)

@@ -7,10 +7,10 @@ using UnityEngine;
 namespace Draco
 {
     /// <summary>
-    /// Decode setting flags.
+    /// Decode setting.
     /// </summary>
     [Flags]
-    public enum DecodeFlags
+    public enum DecodeSettings
     {
         /// <summary>
         /// No setting active.

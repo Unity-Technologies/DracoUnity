@@ -18,18 +18,18 @@ namespace Draco.Encode
     {
 
         /// <summary>Number of triangle indices</summary>
-        public uint indexCount;
+        public readonly uint indexCount;
         /// <summary>Number vertices</summary>
-        public uint vertexCount;
+        public readonly uint vertexCount;
         /// <summary>Encoded data</summary>
-        public NativeArray<byte> data;
+        public readonly NativeArray<byte> data;
         /// <summary>Vertex attribute to Draco property ID mapping</summary>
-        public Dictionary<VertexAttribute, (uint identifier, int dimensions)> vertexAttributes;
+        public readonly Dictionary<VertexAttribute, (uint identifier, int dimensions)> vertexAttributes;
 
         IntPtr m_DracoEncoder;
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-        AtomicSafetyHandle m_SafetyHandle;
+        readonly AtomicSafetyHandle m_SafetyHandle;
 #endif
 
         /// <summary>
@@ -64,7 +64,6 @@ namespace Draco.Encode
         /// </summary>
         public void Dispose()
         {
-            vertexAttributes = null;
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.Release(m_SafetyHandle);
 #endif

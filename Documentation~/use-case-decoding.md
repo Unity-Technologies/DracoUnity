@@ -19,7 +19,7 @@ If you copy a Draco (`.drc`) into the Assets folder directly, it'll get decoded 
 
 Decoding can be achieved by calling one of the [DecodeMesh](xref:Draco.DracoDecoder.DecodeMesh*) overloads.
 
-They differ in input data type (`byte[]`/`NativeSlice<byte>`) and [simple vs. advanced Mesh API](xref:UnityEngine.Mesh) and optionally take [`decodeFlags`](xref:Draco.DecodeFlags) and `attributeIdMap` parameters.
+They differ in input data type (`byte[]`/`NativeSlice<byte>`) and [simple vs. advanced Mesh API](xref:UnityEngine.Mesh) and optionally take [`decodeSettings`](xref:Draco.DecodeSettings) and `attributeIdMap` parameters.
 
 ### Attribute assignment via Draco identifier
 
@@ -63,7 +63,7 @@ Here's a full example
 
 ### Shading parameters
 
-Some shaders might require a mesh to have correct normals (or normals plus tangents). For example, the *Unlit* (a flat-shaded color) shader doesn't require neither while another one with a normal map requires both. A Draco mesh might not contain normals or tangents and in those cases normals (or normals and tangents) need to be calculated. The [DecodeMesh](xref:Draco.DracoDecoder.DecodeMesh*)'s [`decodeFlags`](xref:Draco.DecodeFlags) parameter's [`RequireNormals`](xref:Draco.DecodeFlags.RequireNormals), [`RequireTangents`](xref:Draco.DecodeFlags.RequireTangents) and [`RequireNormalsAndTangents`](xref:Draco.DecodeFlags.RequireNormalsAndTangents) fields allow you to pass on that aspect of the anticipated mesh application.
+Some shaders might require a mesh to have correct normals (or normals plus tangents). For example, the *Unlit* (a flat-shaded color) shader doesn't require neither while another one with a normal map requires both. A Draco mesh might not contain normals or tangents and in those cases normals (or normals and tangents) need to be calculated. The [DecodeMesh](xref:Draco.DracoDecoder.DecodeMesh*)'s [`decodeSettings`](xref:Draco.DecodeSettings) parameter's [`RequireNormals`](xref:Draco.DecodeSettings.RequireNormals), [`RequireTangents`](xref:Draco.DecodeSettings.RequireTangents) and [`RequireNormalsAndTangents`](xref:Draco.DecodeSettings.RequireNormalsAndTangents) fields allow you to pass on that aspect of the anticipated mesh application.
 
 [DecodeMesh](xref:Draco.DracoDecoder.DecodeMesh*) overloads the return a ready-to-use [Mesh](xref:UnityEngine.Mesh) will perform the normals/tangents calculations internally.
 

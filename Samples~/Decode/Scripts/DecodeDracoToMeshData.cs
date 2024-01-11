@@ -29,31 +29,31 @@ namespace Draco.Sample.Decode
             // Draco meshes)
             var meshDataArray = Mesh.AllocateWritableMeshData(1);
 
-            // DecodeFlags hold a couple of decode settings
-            var decodeFlags = DecodeFlags.None;
+            // DecodeSettings hold a couple of decode settings
+            var decodeSettings = DecodeSettings.None;
 
             if (m_ConvertSpace)
             {
                 // Coordinate space is converted from right-hand (like in glTF) to left-hand (Unity) by inverting the
                 // x-axis.
-                decodeFlags |= DecodeFlags.ConvertSpace;
+                decodeSettings |= DecodeSettings.ConvertSpace;
             }
 
             if (m_RequireTangents)
             {
                 // Ensures normal and tangent vertex attributes. If Draco data does not contain them, they are still
                 // allocated and we have to calculate them afterwards (see below).
-                decodeFlags |= DecodeFlags.RequireNormalsAndTangents;
+                decodeSettings |= DecodeSettings.RequireNormalsAndTangents;
             }
             else if (m_RequireNormals)
             {
                 // Ensures normal vertex attribute. If Draco data does not normals, they are still allocated and we have
                 // to calculate them afterwards (see below)
-                decodeFlags |= DecodeFlags.RequireNormals;
+                decodeSettings |= DecodeSettings.RequireNormals;
             }
 
             // Async decoding has to start on the main thread and spawns multiple C# jobs.
-            var result = await DracoDecoder.DecodeMesh(meshDataArray[0], m_DracoData.bytes, decodeFlags);
+            var result = await DracoDecoder.DecodeMesh(meshDataArray[0], m_DracoData.bytes, decodeSettings);
 
             if (result.success)
             {

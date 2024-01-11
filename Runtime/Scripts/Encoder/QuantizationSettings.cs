@@ -175,8 +175,7 @@ namespace Draco.Encode
                 bounds.extents.y * scale.y,
                 bounds.extents.z * scale.z
             ) * 2;
-            var positionQuantization = GetIdealQuantization(maxSize, precision);
-            return positionQuantization;
+            return GetIdealQuantization(maxSize, precision);
         }
 
         /// <summary>

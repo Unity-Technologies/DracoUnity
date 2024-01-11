@@ -53,7 +53,7 @@ namespace Draco
         static FunctionPointer<GetDracoBonesJob.GetIndexValueDelegate> s_GetIndexValueInt32Method;
         static FunctionPointer<GetDracoBonesJob.GetIndexValueDelegate> s_GetIndexValueUInt32Method;
 
-        DecodeFlags m_DecodeFlags;
+        readonly DecodeSettings m_DecodeSettings;
 
         List<AttributeMapBase> m_Attributes;
         int[] m_StreamStrides;
@@ -83,10 +83,10 @@ namespace Draco
 
         public DracoNative(
             Mesh.MeshData mesh,
-            DecodeFlags decodeFlags
+            DecodeSettings decodeSettings
             )
         {
-            m_DecodeFlags = decodeFlags;
+            m_DecodeSettings = decodeSettings;
             m_Mesh = mesh;
         }
 
@@ -131,7 +131,7 @@ namespace Draco
             Profiler.BeginSample("CalculateVertexParams");
 
             bool hasTexCoordOrColor;
-            using (var generator = new AttributeMapsGenerator(dracoMesh, m_DecodeFlags, attributeIdMap))
+            using (var generator = new AttributeMapsGenerator(dracoMesh, m_DecodeSettings, attributeIdMap))
             {
                 m_Attributes = generator.GenerateAttributeMaps(
                     out calculateNormals,
@@ -145,7 +145,7 @@ namespace Draco
             m_StreamMemberCount = new int[maxStreamCount];
             var streamIndex = 0;
 
-            var forceUnityVertexLayout = (m_DecodeFlags & DecodeFlags.ForceUnityVertexLayout) != 0;
+            var forceUnityVertexLayout = (m_DecodeSettings & DecodeSettings.ForceUnityVertexLayout) != 0;
             // skinning requires SkinnedMeshRenderer layout
             forceUnityVertexLayout |= m_BoneWeightMap != null && m_BoneIndexMap != null;
 
@@ -204,7 +204,7 @@ namespace Draco
                 m_StreamStrides[streamIndex] += elementSize;
                 m_StreamMemberCount[streamIndex]++;
             }
-            m_Attributes.Sort();
+            m_Attributes.Sort(AttributeMapBase.CompareByStreamAndOffset);
             Profiler.EndSample(); // CalculateVertexParams
         }
 
@@ -248,7 +248,7 @@ namespace Draco
                 {
                     result = m_DracoDecodeResult,
                     dracoTempResources = m_DracoTempResources,
-                    flip = (m_DecodeFlags & DecodeFlags.ConvertSpace) != 0,
+                    flip = (m_DecodeSettings & DecodeSettings.ConvertSpace) != 0,
                     dataType = m_Mesh.indexFormat == IndexFormat.UInt16 ? DataType.UInt16 : DataType.UInt32,
                     mesh = m_Mesh
                 }.Schedule(decodeVerticesJobHandle);
@@ -367,7 +367,7 @@ namespace Draco
 
             if (hasBoneWeightData)
             {
-                // TODO: BLEND-HACK;
+                // TODO: BLEND-HACK
                 var job = new GetDracoBonesJob()
                 {
                     result = m_DracoDecodeResult,
@@ -646,19 +646,6 @@ namespace Draco
         static extern int DecodeDracoMeshStep2(
             DracoMesh** mesh, void* decoder, void* decoderBuffer);
 
-        // /// <summary>
-        // /// Returns the DracoAttribute at index in mesh. On input, attribute must be
-        // /// null. The returned attr must be released with ReleaseDracoAttribute.
-        // /// Unused currently, thus commented.
-        // /// </summary>
-        // /// <param name="mesh">Draco mesh</param>
-        // /// <param name="index">Attribute index</param>
-        // /// <param name="attr">Resulting attribute pointer</param>
-        // /// <returns>True if the attribute was retrieved successfully. False otherwise.</returns>
-        // [DllImport (k_DracoDecUnityLib)]
-        // static extern bool GetAttribute(
-        //     DracoMesh* mesh, int index, DracoAttribute**attr);
-
         /// <summary>
         /// Returns the DracoAttribute of type at index in mesh. On input, attribute
         /// must be null. E.g. If the mesh has two texture coordinates then
@@ -724,22 +711,22 @@ namespace Draco
         static extern bool GetAttributeData(
             DracoMesh* mesh, DracoAttribute* attr, DracoData** data, bool flip, int componentStride);
 
-        class AttributeMapsGenerator : IDisposable
+        sealed class AttributeMapsGenerator : IDisposable
         {
             List<AttributeMapBase> m_Attributes = new List<AttributeMapBase>();
             HashSet<VertexAttribute> m_AttributeTypes = new HashSet<VertexAttribute>();
             Dictionary<VertexAttribute, int> m_AttributeIdMap;
             DracoMesh* m_DracoMesh;
-            DecodeFlags m_DecodeFlags;
+            readonly DecodeSettings m_DecodeSettings;
 
             public AttributeMapsGenerator(
                 DracoMesh* dracoMesh,
-                DecodeFlags decodeFlags,
+                DecodeSettings decodeSettings,
                 Dictionary<VertexAttribute, int> attributeIdMap
                 )
             {
                 m_DracoMesh = dracoMesh;
-                m_DecodeFlags = decodeFlags;
+                m_DecodeSettings = decodeSettings;
                 m_AttributeIdMap = attributeIdMap;
             }
 
@@ -757,7 +744,7 @@ namespace Draco
 
                 var hasNormals = CreateAttributeMap(AttributeType.Normal, VertexAttribute.Normal, true);
 
-                calculateNormals = !hasNormals && (m_DecodeFlags & DecodeFlags.RequireNormalsAndTangents) != 0;
+                calculateNormals = !hasNormals && (m_DecodeSettings & DecodeSettings.RequireNormalsAndTangents) != 0;
                 if (calculateNormals)
                 {
                     calculateNormals = true;
@@ -768,7 +755,7 @@ namespace Draco
                 {
                     m_Attributes.Add(tangentMap);
                 }
-                else if ((m_DecodeFlags & DecodeFlags.RequireTangents) != 0)
+                else if ((m_DecodeSettings & DecodeSettings.RequireTangents) != 0)
                 {
                     m_Attributes.Add(new CalculatedAttributeMap(VertexAttribute.Tangent, VertexAttributeFormat.Float32, 4, 4));
                 }
@@ -856,7 +843,7 @@ namespace Draco
                             attribute,
                             type.Value,
                             format.Value,
-                            ConvertSpace(type.Value) && (m_DecodeFlags & DecodeFlags.ConvertSpace) != 0
+                            ConvertSpace(type.Value) && (m_DecodeSettings & DecodeSettings.ConvertSpace) != 0
                         );
                         m_Attributes.Add(map);
                         m_AttributeTypes.Add(type.Value);
@@ -887,7 +874,7 @@ namespace Draco
                         attribute,
                         type,
                         format.Value,
-                        ConvertSpace(type) && (m_DecodeFlags & DecodeFlags.ConvertSpace) != 0
+                        ConvertSpace(type) && (m_DecodeSettings & DecodeSettings.ConvertSpace) != 0
                     );
                     m_AttributeTypes.Add(type);
                     return true;
@@ -918,13 +905,12 @@ namespace Draco
             }
         }
 
-        abstract class AttributeMapBase : IComparable<AttributeMapBase>, IDisposable
+        abstract class AttributeMapBase : IDisposable
         {
             public readonly VertexAttribute attribute;
             public VertexAttributeFormat format;
             public int offset;
             public int stream;
-            public bool flip;
 
             protected AttributeMapBase(VertexAttribute attribute, VertexAttributeFormat format)
             {
@@ -937,17 +923,23 @@ namespace Draco
             public abstract int numComponents { get; }
             public abstract int elementSize { get; }
 
-            public abstract void Dispose();
+            public void Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
+
+            protected abstract void Dispose(bool disposing);
 
             public VertexAttributeDescriptor GetVertexAttributeDescriptor()
             {
                 return new VertexAttributeDescriptor(attribute, format, numComponents, stream);
             }
 
-            public int CompareTo(AttributeMapBase b)
+            public static int CompareByStreamAndOffset(AttributeMapBase a, AttributeMapBase b)
             {
-                var result = stream.CompareTo(b.stream);
-                if (result == 0) result = offset.CompareTo(b.offset);
+                var result = a.stream.CompareTo(b.stream);
+                if (result == 0) result = a.offset.CompareTo(b.offset);
                 return result;
             }
         }
@@ -989,7 +981,7 @@ namespace Draco
 
             public override int elementSize => numComponents * DataTypeSize((DataType)dracoAttribute->dataType);
 
-            public override void Dispose()
+            protected override void Dispose(bool disposing)
             {
                 var tmp = dracoAttribute;
                 ReleaseDracoAttribute(&tmp);
@@ -999,8 +991,8 @@ namespace Draco
 
         class CalculatedAttributeMap : AttributeMapBase
         {
-            int m_NumComponents;
-            int m_ElementSize;
+            readonly int m_NumComponents;
+            readonly int m_ElementSize;
 
             public CalculatedAttributeMap(VertexAttribute attribute, VertexAttributeFormat format, int numComponents, int componentSize) : base(attribute, format)
             {
@@ -1011,7 +1003,7 @@ namespace Draco
             public override int numComponents => m_NumComponents;
             public override int elementSize => m_ElementSize;
 
-            public override void Dispose() { }
+            protected override void Dispose(bool disposing) { }
         }
 
         [BurstCompile]

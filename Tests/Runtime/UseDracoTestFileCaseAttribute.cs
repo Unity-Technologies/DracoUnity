@@ -16,13 +16,13 @@ namespace Draco.Tests
     public class UseDracoTestFileCaseAttribute : UnityEngine.TestTools.UnityTestAttribute, ITestBuilder
     {
 
-        readonly string[] m_SampleSet;
+        readonly string[] m_TestFileNames;
 
         readonly NUnitTestCaseBuilder m_Builder = new NUnitTestCaseBuilder();
 
-        public UseDracoTestFileCaseAttribute(string[] sampleSetPath)
+        public UseDracoTestFileCaseAttribute(string[] testFileNames)
         {
-            m_SampleSet = sampleSetPath;
+            m_TestFileNames = testFileNames;
         }
 
         IEnumerable<TestMethod> ITestBuilder.BuildFrom(IMethodInfo method, Test suite)
@@ -30,18 +30,18 @@ namespace Draco.Tests
             List<TestMethod> results = new List<TestMethod>();
             var nameCounts = new Dictionary<string, int>();
 
-            if (m_SampleSet == null)
+            if (m_TestFileNames == null)
             {
-                throw new Exception("SampleSet  not set");
+                throw new InvalidDataException("Test file names not set");
             }
 
             try
             {
-                foreach (var testCase in m_SampleSet)
+                foreach (var testFileName in m_TestFileNames)
                 {
-                    var data = new TestCaseData(new object[] { testCase });
+                    var data = new TestCaseData(new object[] { testFileName });
 
-                    var origName = Path.GetFileName(testCase);
+                    var origName = Path.GetFileName(testFileName);
                     string name;
                     if (nameCounts.TryGetValue(origName, out var count))
                     {

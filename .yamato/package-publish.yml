@@ -1,0 +1,50 @@
+{% metadata_file .yamato/package.metafile -%}
+---
+
+publish:
+  name: Publish to Internal Registry
+  agent:
+    type: Unity::VM
+    image: package-ci/ubuntu-22.04:v4
+    flavor: b1.small
+  commands:
+    - npm install upm-ci-utils@stable -g --registry {{ registry.npm }}
+    - upm-ci package publish
+  dependencies:
+{% for editor in test_editors -%}
+{% for platform in test_platforms -%}
+    - .yamato/package-test.yml#test_{{ platform.name }}_{{ editor.version }}
+{% endfor -%}
+{% endfor -%}
+  artifacts:
+    artifacts:
+      paths:
+        - "upm-ci~/packages/*.tgz"
+    logs:
+      paths:
+        - "upm-ci~/upm-ci.log"
+
+
+publish_dry_run:
+  name: Dry Run Publish
+  agent:
+    type: Unity::VM
+    image: package-ci/ubuntu-22.04:v4
+    flavor: b1.small
+  commands:
+    - npm install upm-ci-utils@stable -g --registry {{ registry.npm }}
+    # going for dry run until we're ready to do a real publish
+    - upm-ci package publish --dry-run
+  dependencies:
+{% for editor in test_editors -%}
+{% for platform in test_platforms -%}
+    - .yamato/package-test.yml#test_{{ platform.name }}_{{ editor.version }}
+{% endfor -%}
+{% endfor -%}
+  artifacts:
+    artifacts:
+      paths:
+        - "upm-ci~/packages/*.tgz"
+    logs:
+      paths:
+        - "upm-ci~/upm-ci.log"

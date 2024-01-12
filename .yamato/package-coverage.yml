@@ -1,0 +1,53 @@
+{% metadata_file .yamato/package.metafile -%}
+package-assembly: Draco
+---
+{% for editor in test_editors -%}
+{% for platform in test_platforms -%}
+test_coverage_{{ platform.name }}_{{ editor.version }}:
+  name : Test Coverage on {{ platform.name }} ({{ editor.version }})
+  agent:
+    type: {{ platform.type }}
+    image: {{ platform.image }}
+    flavor: {{ platform.flavor}}
+  commands:
+    - npm install upm-ci-utils@stable -g --registry {{ registry.npm }}
+    - |
+{% if platform.name == "win" -%}
+{% if editor.version == "2020.3" -%}
+      set DISABLE_SUB_PACKAGE_LOAD=TRUE
+{% endif -%}
+      upm-ci package test -u {{ editor.version }} --type package-tests --extra-create-project-arg=-upmNoDefaultPackages --enable-code-coverage --extra-utr-arg=--coverage-results-path={% if platform.name == "mac" %}$YAMATO_SOURCE_DIR{% else %}%YAMATO_SOURCE_DIR%{% endif %}/upm-ci~/test-results/CoverageResults/{{ platform.name }}/{{ editor.version ^ }} --code-coverage-options 'generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+{{ package-assembly }}*;pathReplacePatterns:@*,,**/PackageCache/,Packages/;'
+{% else -%}
+      {% if editor.version == "2020.3" %}DISABLE_SUB_PACKAGE_LOAD=TRUE {% endif %}upm-ci package test -u {{ editor.version }} --type package-tests --extra-create-project-arg=-upmNoDefaultPackages --enable-code-coverage --extra-utr-arg=--coverage-results-path={% if platform.name == "mac" %}$YAMATO_SOURCE_DIR{% else %}%YAMATO_SOURCE_DIR%{% endif %}/upm-ci~/test-results/CoverageResults/{{ platform.name }}/{{ editor.version ^ }} --code-coverage-options 'generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+{{ package-assembly }}*;pathReplacePatterns:@*,,**/PackageCache/,Packages/;'
+{% endif -%}
+  artifacts:
+    logs:
+      paths:
+        - "upm-ci~/test-results/**/*"
+        - "upm-ci~/upm-ci.log"
+  dependencies:
+    - .yamato/package-pack.yml#pack
+{% endfor -%}
+{% endfor -%}
+
+
+{% for platform in test_platforms -%}
+tests_coverage_all_{{ platform.name }}:
+  name: _Run All Coverage Tests ({{ platform.name }})
+  dependencies:
+    - .yamato/package-pack.yml#pack
+{% for editor in test_editors -%}
+    - .yamato/package-coverage.yml#test_coverage_{{ platform.name }}_{{ editor.version }}
+{% endfor -%}
+{% endfor -%}
+
+
+tests_coverage_all:
+  name: All Coverage Tests
+  dependencies:
+    - .yamato/package-pack.yml#pack
+{% for platform in test_platforms -%}
+{% for editor in coverage_editors -%}
+    - .yamato/package-coverage.yml#test_coverage_{{ platform.name }}_{{ editor.version }}
+{% endfor -%}
+{% endfor -%}

@@ -26,6 +26,13 @@ namespace SubPackage
         [MenuItem("Help/Configure Draco Sub Packages")]
         static async Task ConfigureSubPackagesAsync()
         {
+#if UNITY_2020
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISABLE_SUB_PACKAGE_LOAD")))
+            {
+                Debug.Log($"{SubPackageConfiguration.packageName} WebGL sub-package import: Skipped due to environment variable DISABLE_SUB_PACKAGE_LOAD.");
+                return;
+            }
+#endif
             try
             {
                 var config = SubPackageConfiguration.config;

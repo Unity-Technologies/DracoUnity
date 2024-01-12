@@ -1,0 +1,49 @@
+{% metadata_file .yamato/package.metafile -%}
+---
+
+{% for editor in test_editors -%}
+{% for platform in test_platforms -%}
+test_{{ platform.name }}_{{ editor.version }}:
+  name : Test {{ editor.version }} on {{ platform.name }}
+  agent:
+    type: {{ platform.type }}
+    image: {{ platform.image }}
+    flavor: {{ platform.flavor}}
+  commands:
+    - npm install upm-ci-utils@stable -g --registry {{ registry.npm }}
+    - |
+{% if platform.name == "win" -%}
+{% if editor.version == "2020.3" -%}
+      set DISABLE_SUB_PACKAGE_LOAD=TRUE
+{% endif -%}
+      upm-ci package test -u {{editor.version}} --type isolation-tests --extra-create-project-arg=-upmNoDefaultPackages
+{% else -%}
+      {% if editor.version == "2020.3" %}DISABLE_SUB_PACKAGE_LOAD=TRUE {% endif %}upm-ci package test -u {{editor.version}} --type isolation-tests --extra-create-project-arg=-upmNoDefaultPackages
+{% endif -%}
+  artifacts:
+    logs:
+      paths:
+        - "upm-ci~/test-results/**/*"
+        # - "upm-ci~/upm-ci.log"
+  dependencies:
+    - .yamato/package-pack.yml#pack
+{% endfor -%}
+{% endfor -%}
+
+test_trigger:
+  name: Package Tests Trigger
+  triggers:
+    branches:
+      only:
+      - "unity"
+    pull_requests:
+      - targets:
+          only:
+            - "/.*/"
+  dependencies:
+    - .yamato/package-pack.yml#pack
+{% for editor in test_editors -%}
+{% for platform in test_platforms -%}
+    - .yamato/package-test.yml#test_{{platform.name}}_{{editor.version}}
+{% endfor -%}
+{% endfor -%}

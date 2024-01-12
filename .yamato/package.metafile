@@ -1,0 +1,23 @@
+test_editors:
+  - version: 2020.3
+  - version: 2021.3
+  - version: 2022.3
+  - version: trunk
+
+test_platforms:
+  - name: win
+    type: Unity::VM
+    image: package-ci/win10:v4
+    flavor: b1.large
+  - name: mac
+    type: Unity::VM::osx
+    image: package-ci/macos-13:v4
+    flavor: m1.mac
+
+coverage_editors:
+  - version: 2021.3
+  - version: 2022.3
+  - version: trunk
+
+registry:
+  npm: https://artifactory.prd.it.unity3d.com/artifactory/api/npm/upm-npm

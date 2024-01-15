@@ -22,7 +22,7 @@ If you've used the *Tools* -> *Draco* menu items or one of the classes associate
 
 ## Unity Fork
 
-With the release of version 5.0.0-pre.1 the package name and identifier were changed to *Draco for Unity* (`com.unity.cloud.draco`) for the following reasons:
+With the release of version 5.0.0 the package name and identifier were changed to *Draco for Unity* (`com.unity.cloud.draco`) for the following reasons:
 
 - Better integration into Unity internal development processes (including quality assurance and support)
 - Distribution via the Unity Package Manager (no scoped libraries required anymore)

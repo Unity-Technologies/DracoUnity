@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [5.0.0] - 2024-01-13
 
 ### Added
 - Support for efficient self-managed encoding of multiple meshes. Users may use the advanced Mesh API to acquire readable mesh data for multiple meshes at once and pass the data on to new `DracoEncoder.EncodeMesh` overloads that accept said `MeshData`.
@@ -39,7 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI maintenance
 
 ### Deprecated
-
 - `DracoMeshLoader` (in favor of [`DracoDecoder`](xref:Draco.DracoDecoder))
 - `DracoEncoder.EncodeMesh` overloads that have many individual settings parameters instead of [`QuantizationSettings`](xref:Draco.Encode.QuantizationSettings)/[`SpeedSettings`](xref:Draco.Encode.SpeedSettings).
 
@@ -48,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Menu items under `Tools` -> `Draco`. They can be brought back by installing the *Draco Tools Menu* package sample.
 
 ### Fixed
+- WebGL build with Unity 2022 and newer (due to WebGL sub-packages).
 - Destroying temporary copy (instead of original) GameObject when encoding selected GameObject from the menu
 - Reference assembly definitions in `DracoEncoder` by name instead of GUID to avoid package import errors.
 - Decoded mesh's bounds are calculated and returned/set accordingly.

@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Build compiler error about missing "ConditionalAttribute"
+
 ## [5.0.0] - 2024-01-13
 
 ### Added

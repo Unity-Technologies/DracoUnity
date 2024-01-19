@@ -399,7 +399,7 @@ namespace Draco
         }
 
 #if !UNITY_EDITOR
-        [Conditional("DRACO_PLATFORM_NOT_SUPPORTED")]
+        [System.Diagnostics.Conditional("DRACO_PLATFORM_NOT_SUPPORTED")]
 #endif
         internal static void CertifySupportedPlatform(
 #if UNITY_EDITOR

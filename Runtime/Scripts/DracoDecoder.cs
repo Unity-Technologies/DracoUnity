@@ -398,8 +398,8 @@ namespace Draco
             return (IntPtr)UnsafeUtility.PinGCArrayAndGetDataAddress(encodedData, out gcHandle);
         }
 
-#if !UNITY_EDITOR
-        [System.Diagnostics.Conditional("DRACO_PLATFORM_NOT_SUPPORTED")]
+#if !UNITY_EDITOR && DRACO_PLATFORM_SUPPORTED
+        [System.Diagnostics.Conditional("FALSE")]
 #endif
         internal static void CertifySupportedPlatform(
 #if UNITY_EDITOR

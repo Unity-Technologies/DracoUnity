@@ -30,7 +30,7 @@ namespace Draco
         internal const string dracoUnityLib = "draco_unity";
 #else
         // Unsupported platform
-        internal const string dracoUnityLib = "invalid";
+        internal const string dracoUnityLib = "UnsupportedPlatform";
 #endif
 
         public const int maxStreamCount = 4;

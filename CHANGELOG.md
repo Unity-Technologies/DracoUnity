@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Windows ARM64 Editor support
 
+### Fixed
+- Improved error message when using package on unsupported platform.
+
 ## [5.0.2] - 2024-01-30
 
 ### Fixed
@@ -69,7 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Properly dispose NativeArrays in case of error (fixes atteneder/DracoUnity#53)
 - Point clouds' index buffer is properly initialized (fixes atteneder/DracoUnity#64)
 - Properly set root namespace on all assembly definitions
-- Compilation succeeds on non-supported platforms (with no API exposed)
+- Compilation succeeds on non-supported platforms
 - Crash in async Editor import
 
 ## [4.1.0] - 2023-04-14

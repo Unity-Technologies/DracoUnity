@@ -2,7 +2,7 @@ fileFormatVersion: 2
 guid: df9c1a9f00c2b1047acee3e5cc17fa03
 PluginImporter:
   externalObjects: {}
-  serializedVersion: 2
+  serializedVersion: 3
   iconMap: {}
   executionOrder: {}
   defineConstraints: []
@@ -11,64 +11,36 @@ PluginImporter:
   isExplicitlyReferenced: 0
   validateReferences: 1
   platformData:
-  - first:
-      : Any
-    second:
+    Any:
       enabled: 0
       settings:
-        Exclude Editor: 1
+        Exclude Editor: 0
         Exclude Linux64: 0
         Exclude OSXUniversal: 0
         Exclude Win: 1
-        Exclude Win64: 1
-        Exclude WindowsStoreApps: 1
-  - first:
-      Any: 
-    second:
-      enabled: 0
-      settings: {}
-  - first:
-      Editor: Editor
-    second:
-      enabled: 0
+        Exclude Win64: 0
+    Editor:
+      enabled: 1
       settings:
-        CPU: AnyCPU
+        CPU: ARM64
         DefaultValueInitialized: true
         OS: Windows
-  - first:
-      Standalone: Linux64
-    second:
+    Linux64:
       enabled: 1
       settings:
-        CPU: AnyCPU
-  - first:
-      Standalone: OSXUniversal
-    second:
+        CPU: None
+    OSXUniversal:
       enabled: 1
       settings:
-        CPU: AnyCPU
-  - first:
-      Standalone: Win
-    second:
-      enabled: 0
-      settings:
-        CPU: AnyCPU
-  - first:
-      Standalone: Win64
-    second:
+        CPU: None
+    Win:
       enabled: 0
       settings:
         CPU: None
-  - first:
-      Windows Store Apps: WindowsStoreApps
-    second:
-      enabled: 0
+    Win64:
+      enabled: 1
       settings:
-        CPU: X86
-        DontProcess: false
-        PlaceholderPath: 
-        SDK: AnySDK
-        ScriptingBackend: AnyScriptingBackend
+        CPU: ARM64
   userData: 
   assetBundleName: 
   assetBundleVariant: 

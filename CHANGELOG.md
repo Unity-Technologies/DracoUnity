@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Windows ARM64 Editor support
 
+### Changed
+- Updated Google Draco to version 1.5.7.
+- Raised deployment target for iOS and tvOS to 11.0
+
+### Removed
+- Apple iOS 32-bit armv7 architectures
+
 ### Fixed
 - Improved error message when using package on unsupported platform.
 

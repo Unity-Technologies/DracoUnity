@@ -12,6 +12,10 @@ namespace Draco.Editor
 {
     class BuildPreProcessor : IPreprocessBuildWithReport
     {
+        internal const string packageName = "Packages/com.unity.cloud.draco/";
+
+        const string k_PreCompiledLibraryName = "libdraco_unity.";
+
         public int callbackOrder => 0;
 
         void IPreprocessBuildWithReport.OnPreprocessBuild(BuildReport report)
@@ -25,20 +29,24 @@ namespace Draco.Editor
             var isSimulatorBuild = IsSimulatorBuild(platformGroup);
             foreach (var plugin in allPlugins)
             {
-                if (plugin.isNativePlugin)
+                if (plugin.isNativePlugin
+                    && plugin.GetBuildTargetGroup() == platformGroup
+                    && plugin.assetPath.StartsWith(packageName)
+                    && plugin.assetPath.Contains(k_PreCompiledLibraryName)
+                   )
                 {
                     switch (platformGroup)
                     {
                         case BuildTargetGroup.iOS:
                         case BuildTargetGroup.tvOS:
-                            if (plugin.IsAppleArmPlatformLibrary())
-                            {
-                                plugin.SetIncludeInBuildDelegate(
-                                    plugin.IsSimulatorLibrary() == isSimulatorBuild
-                                    ? IncludeLibraryInBuild
-                                    : (PluginImporter.IncludeInBuildDelegate)ExcludeLibraryInBuild
-                                    );
-                            }
+#if UNITY_2022_3_OR_NEWER
+                        case BuildTargetGroup.VisionOS:
+#endif
+                            plugin.SetIncludeInBuildDelegate(
+                                plugin.IsSimulatorLibrary() == isSimulatorBuild
+                                ? IncludeLibraryInBuild
+                                : (PluginImporter.IncludeInBuildDelegate)ExcludeLibraryInBuild
+                                );
                             break;
                     }
                 }
@@ -49,6 +57,12 @@ namespace Draco.Editor
         {
             switch (platformGroup)
             {
+#if UNITY_2022_3_OR_NEWER
+                // Needs to be at the top,
+                // because platformGroup(BuildTargetGroup.VisionOS) == BuildTargetGroup.iOS evaluates to true!
+                case BuildTargetGroup.VisionOS:
+                    return PlayerSettings.VisionOS.sdkVersion == VisionOSSdkVersion.Simulator;
+#endif
                 case BuildTargetGroup.iOS:
                     return PlayerSettings.iOS.sdkVersion == iOSSdkVersion.SimulatorSDK;
                 case BuildTargetGroup.tvOS:
@@ -71,15 +85,32 @@ namespace Draco.Editor
 
     static class PluginImporterExtension
     {
-        /// <summary>
-        /// Tells if the library targets Apple non-macOS platforms.
-        /// </summary>
-        /// <param name="plugin">Native library importer.</param>
-        /// <returns>True if the target platform is among iOS, tvOS or visionOS. False otherwise.</returns>
-        public static bool IsAppleArmPlatformLibrary(this PluginImporter plugin)
+        public static BuildTargetGroup GetBuildTargetGroup(this PluginImporter plugin)
         {
-            var extension = Path.GetExtension(plugin.assetPath);
-            return extension == ".a";
+            var pluginsPath = $"{BuildPreProcessor.packageName}Runtime/Plugins/";
+            var lastSlashIndex = plugin.assetPath.IndexOf('/', pluginsPath.Length);
+            var relativePath = plugin.assetPath.Substring(pluginsPath.Length, lastSlashIndex - pluginsPath.Length);
+            switch (relativePath)
+            {
+                case "Android":
+                    return BuildTargetGroup.Android;
+                case "iOS":
+                    return BuildTargetGroup.iOS;
+                case "tvOS":
+                    return BuildTargetGroup.tvOS;
+#if UNITY_2022_3_OR_NEWER
+                case "visionOS":
+                    return BuildTargetGroup.VisionOS;
+#endif
+                case "WSA":
+                    return BuildTargetGroup.WSA;
+                case "Windows":
+                case "x86":
+                case "x86_64":
+                    return BuildTargetGroup.Standalone;
+            }
+
+            return BuildTargetGroup.Unknown;
         }
 
         public static bool IsSimulatorLibrary(this PluginImporter plugin)

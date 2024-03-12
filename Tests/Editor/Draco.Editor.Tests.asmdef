@@ -3,7 +3,8 @@
     "rootNamespace": "Draco.Editor.Tests",
     "references": [
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "Draco.Editor"
     ],
     "includePlatforms": [
         "Editor"

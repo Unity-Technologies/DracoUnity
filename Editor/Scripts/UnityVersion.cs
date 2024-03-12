@@ -1,11 +1,11 @@
-// SPDX-FileCopyrightText: 2023 Unity Technologies and the Draco for Unity authors
+// SPDX-FileCopyrightText: 2024 Unity Technologies and the Draco for Unity authors
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-namespace SubPackage
+namespace Draco.Editor
 {
 
     readonly struct UnityVersion : IComparable<UnityVersion>
@@ -17,11 +17,9 @@ namespace SubPackage
         public readonly int Sequence;
 
 
-        const string k_Pattern = @"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*).*$";
-        const string k_FullPattern = @"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)([abf])(0|[1-9]\d*).*$";
+        const string k_Pattern = @"^(?<major>0|[1-9]\d*)(\.(?<minor>0|[1-9]\d*))?(\.(?<patch>0|[1-9]\d*))?(?<type>[abf])?(?<sequence>0|[1-9]\d*)?$";
 
         static readonly Regex k_Regex = new Regex(k_Pattern, RegexOptions.CultureInvariant, TimeSpan.FromMinutes(1));
-        static readonly Regex k_FullRegex = new Regex(k_FullPattern, RegexOptions.CultureInvariant, TimeSpan.FromMinutes(1));
 
         public UnityVersion(string version)
         {
@@ -30,21 +28,25 @@ namespace SubPackage
             if (!match.Success)
                 throw new InvalidOperationException($"Failed to parse semantic version {version}");
 
-            Major = int.Parse(match.Groups[1].Value);
-            Minor = int.Parse(match.Groups[2].Value);
-            Patch = int.Parse(match.Groups[3].Value);
+            Major = int.Parse(match.Groups["major"].Value);
+            var minorGroup = match.Groups["minor"];
+            Minor = minorGroup.Success
+                ? int.Parse(minorGroup.Value)
+                : 0;
+            var patchGroup = match.Groups["patch"];
+            Patch = patchGroup.Success
+                ? int.Parse(patchGroup.Value)
+                : 0;
 
-            match = k_FullRegex.Match(version);
-            if (match.Success)
-            {
-                Type = match.Groups[4].Value[0];
-                Sequence = int.Parse(match.Groups[5].Value);
-            }
-            else
-            {
-                Type = 'f';
-                Sequence = 1;
-            }
+            var typeGroup = match.Groups["type"];
+            Type = typeGroup.Success
+                ? typeGroup.Value[0]
+                : 'f';
+
+            var sequenceGroup = match.Groups["sequence"];
+            Sequence = sequenceGroup.Success
+                ? int.Parse(sequenceGroup.Value)
+                : 1;
         }
 
         public override string ToString()

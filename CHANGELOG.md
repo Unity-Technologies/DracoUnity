@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows ARM64 Editor support
 - Apple tvOS support
 - Apple visionOS support
+- Web binaries
+
+### Changed
+- Unity version-specific web sub-packages are not required anymore and will be removed automatically from the project upon detection (to avoid linker conflicts during web builds).
+- Removed dummy Editor tests.
 
 ### Changed
 - Updated Google Draco to version 1.5.7.

@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [5.1.0] - 2024-03-12
 
 ### Added
 - Windows ARM64 Editor support
@@ -15,8 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Unity version-specific web sub-packages are not required anymore and will be removed automatically from the project upon detection (to avoid linker conflicts during web builds).
 - Removed dummy Editor tests.
-
-### Changed
 - Updated Google Draco to version 1.5.7.
 - Raised deployment target for iOS and tvOS to 11.0
 

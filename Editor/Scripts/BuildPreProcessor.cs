@@ -1,6 +1,10 @@
 // SPDX-FileCopyrightText: 2023 Unity Technologies and the Draco for Unity authors
 // SPDX-License-Identifier: Apache-2.0
 
+#if UNITY_2023_3_OR_NEWER || UNITY_2022_3
+#define VISION_OS_SUPPORTED
+#endif
+
 using System;
 using System.IO;
 using UnityEngine;
@@ -43,7 +47,7 @@ namespace Draco.Editor
                     {
                         case BuildTarget.iOS:
                         case BuildTarget.tvOS:
-#if UNITY_2022_3_OR_NEWER
+#if VISION_OS_SUPPORTED
                         case BuildTarget.VisionOS:
 #endif
                             plugin.SetIncludeInBuildDelegate(
@@ -72,7 +76,7 @@ namespace Draco.Editor
                     return PlayerSettings.iOS.sdkVersion == iOSSdkVersion.SimulatorSDK;
                 case BuildTarget.tvOS:
                     return PlayerSettings.tvOS.sdkVersion == tvOSSdkVersion.Simulator;
-#if UNITY_2022_3_OR_NEWER
+#if VISION_OS_SUPPORTED
                 case BuildTarget.VisionOS:
                     return PlayerSettings.VisionOS.sdkVersion == VisionOSSdkVersion.Simulator;
 #endif

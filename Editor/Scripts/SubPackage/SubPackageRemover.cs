@@ -23,11 +23,18 @@ namespace SubPackage
         const string k_CleanupRegex = @"^com\.unity\.cloud\.draco\.webgl-.*$";
 
         static readonly string k_DialogText = $"Obsolete packages where found! Those were needed by previous versions of, and are now in conflict with {k_PackageName}. They will be removed now.";
-        static readonly string k_ErrorMessage = $"Error adding {k_PackageName} WebGL sub-packages.";
+        static readonly string k_ErrorMessage = $"Error removing {k_PackageName} WebGL sub-packages.";
 
         [InitializeOnLoadMethod]
         static async Task TryRemoveObsoleteSubPackagesAsync()
         {
+#if UNITY_2020
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISABLE_SUB_PACKAGE_LOAD")))
+            {
+                Debug.Log($"{k_PackageName} WebGL sub-package removal: Skipped due to environment variable DISABLE_SUB_PACKAGE_LOAD.");
+                return;
+            }
+#endif
             try
             {
                 var installedPackages = await GetAllInstalledPackagesAsync();

@@ -1,7 +1,8 @@
 test_editors:
-  - version: 2020.3
-  - version: 2021.3
-  - version: 2022.3
+  - version: 2020
+  - version: 2021
+  - version: 2022
+    coverage: !!bool true
   - version: 2023.2
   - version: trunk
 
@@ -14,11 +15,6 @@ test_platforms:
     type: Unity::VM::osx
     image: package-ci/macos-13:v4
     flavor: m1.mac
-
-coverage_editors:
-  - version: 2021.3
-  - version: 2022.3
-  - version: trunk
 
 registry:
   npm: https://artifactory.prd.it.unity3d.com/artifactory/api/npm/upm-npm

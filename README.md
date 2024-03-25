@@ -1,5 +1,7 @@
 # Draco for Unity
 
+[![codecov](https://codecov.unity3d.com/ghe/unity/com.unity.cloud.draco/graph/badge.svg?token=1ZD3ZN3WRC)](https://codecov.unity3d.com/ghe/unity/com.unity.cloud.draco)
+
 Unity package that integrates the [Draco 3D data compression library][draco] within Unity.
 
 ## Installing

@@ -1,6 +1,10 @@
 // SPDX-FileCopyrightText: 2024 Unity Technologies and the Draco for Unity authors
 // SPDX-License-Identifier: Apache-2.0
 
+#if UNITY_2023_3_OR_NEWER || UNITY_2022_3
+#define VISION_OS_SUPPORTED
+#endif
+
 using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
@@ -22,13 +26,15 @@ namespace Draco.Editor.Tests
             AppleLibraryTypeCheck(BuildTarget.tvOS);
         }
 
-#if UNITY_2022_3_OR_NEWER
         [Test]
         public void AppleVisionOSLibraryTypeCheck()
         {
-            AppleLibraryTypeCheck(BuildTarget.tvOS);
-        }
+#if VISION_OS_SUPPORTED
+            AppleLibraryTypeCheck(BuildTarget.VisionOS);
+#else
+            Assert.Ignore("VisionOS is not supported in this Unity version.");
 #endif
+        }
 
         static void AppleLibraryTypeCheck(BuildTarget buildTarget)
         {

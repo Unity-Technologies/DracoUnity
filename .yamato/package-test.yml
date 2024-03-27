@@ -26,9 +26,9 @@ test_{{ platform.name }}_{{ editor.version }}:
       --type package-tests
       --extra-create-project-arg=-upmNoDefaultPackages
 {% if editor.coverage -%}
-{% capture codecov_result_dir -%}upm-ci~/test-results/CoverageResults/{{ platform.name }}/{{ editor.version ^ }}{% endcapture -%}
+{% capture codecov_result_dir -%}upm-ci~/test-results/CoverageResults/{{ platform.name }}/{{ editor.version }}{% endcapture -%}
       --enable-code-coverage
-      --extra-utr-arg="--coverage-results-path={{ codecov_result_dir }} --coverage-upload-options=\"reports:{{ codecov_result_dir }}/*-opencov/*/*.xml;name:{{ platform.name }}_{{ editor.version }};flags:default;verbose\""
+      --extra-utr-arg="--coverage-results-path={{ platform.yamato_source_dir }}/{{ codecov_result_dir }} --coverage-upload-options=\"reports:{{ codecov_result_dir }}/*-opencov/*/*.xml;name:{{ platform.name }}_{{ editor.version }};flags:default;verbose\""
       --code-coverage-options 'generateAdditionalMetrics;generateHtmlReport;assemblyFilters:{{ package-assembly-filter }};pathReplacePatterns:@*,,**/PackageCache/,Packages/;'
 {% endif -%}
 

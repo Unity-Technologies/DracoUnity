@@ -11,10 +11,12 @@ test_platforms:
     type: Unity::VM
     image: package-ci/win10:v4
     flavor: b1.large
+    yamato_source_dir: "%YAMATO_SOURCE_DIR%"
   - name: mac
     type: Unity::VM::osx
     image: package-ci/macos-13:v4
     flavor: m1.mac
+    yamato_source_dir: "${YAMATO_SOURCE_DIR}"
 
 registry:
   npm: https://artifactory.prd.it.unity3d.com/artifactory/api/npm/upm-npm

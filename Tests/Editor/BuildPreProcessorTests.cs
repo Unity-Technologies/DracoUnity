@@ -39,7 +39,9 @@ namespace Draco.Editor.Tests
         static void AppleLibraryTypeCheck(BuildTarget buildTarget)
         {
             var allPlugins = PluginImporter.GetImporters(buildTarget)
-                .Where(plugin => plugin.isNativePlugin && plugin.assetPath.StartsWith(BuildPreProcessor.packagePath))
+                .Where(plugin => plugin.isNativePlugin
+                    && plugin.assetPath.StartsWith(BuildPreProcessor.packagePath)
+                    && !plugin.assetPath.EndsWith(".xcprivacy"))
                 .ToList();
             Assert.GreaterOrEqual(2, allPlugins.Count);
             foreach (var plugin in allPlugins)

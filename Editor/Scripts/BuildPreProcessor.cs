@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 Unity Technologies and the Draco for Unity authors
+// SPDX-FileCopyrightText: 2024 Unity Technologies and the Draco for Unity authors
 // SPDX-License-Identifier: Apache-2.0
 
 #if UNITY_2023_3_OR_NEWER || UNITY_2022_3
@@ -6,7 +6,9 @@
 #endif
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.Build;
@@ -16,14 +18,16 @@ namespace Draco.Editor
 {
     class BuildPreProcessor : IPreprocessBuildWithReport
     {
-        public const string packagePath = "Packages/com.unity.cloud.draco/";
+        public const string packagePath = "Packages/com.unity.cloud.draco/Runtime/Plugins/";
 
-        const string k_PreCompiledLibraryName = "libdraco_unity.";
-
-        public const string wasm2020Guid = "8c582db225b9e4bd4865264fece2da8b";
-        public const string wasm2021Guid = "9846a73c344db4fa49e600594da610eb";
-        public const string wasm2022Guid = "300cc74d74bc64ca78d3fe7d50cb5439";
-        public const string wasm2023Guid = "9ab284c4ad5904cf09339d3522f7b10d";
+        internal static readonly Dictionary<GUID, int> webAssemblyLibraries = new Dictionary<GUID, int>()
+        {
+            // Database of WebAssembly library files within folder `Runtime/Plugins/WebGL`
+            [new GUID("8c582db225b9e4bd4865264fece2da8b")] = 2020, // 2020/libdraco_unity.bc
+            [new GUID("9846a73c344db4fa49e600594da610eb")] = 2021, // 2021/libdraco_unity.a
+            [new GUID("300cc74d74bc64ca78d3fe7d50cb5439")] = 2022, // 2022/libdraco_unity.a
+            [new GUID("9ab284c4ad5904cf09339d3522f7b10d")] = 2023, // 2023/libdraco_unity.a
+        };
 
         public int callbackOrder => 0;
 
@@ -35,12 +39,10 @@ namespace Draco.Editor
         static void SetRuntimePluginCopyDelegate(BuildTarget platform)
         {
             var allPlugins = PluginImporter.GetImporters(platform);
-            var isSimulatorBuild = IsSimulatorBuild(platform);
             foreach (var plugin in allPlugins)
             {
                 if (plugin.isNativePlugin
                     && plugin.assetPath.StartsWith(packagePath)
-                    && plugin.assetPath.Contains(k_PreCompiledLibraryName)
                    )
                 {
                     switch (platform)
@@ -50,18 +52,13 @@ namespace Draco.Editor
 #if VISION_OS_SUPPORTED
                         case BuildTarget.VisionOS:
 #endif
-                            plugin.SetIncludeInBuildDelegate(
-                                IsAppleSimulatorLibrary(plugin) == isSimulatorBuild
-                                ? IncludeLibraryInBuild
-                                : (PluginImporter.IncludeInBuildDelegate)ExcludeLibraryInBuild
-                                );
+                            plugin.SetIncludeInBuildDelegate(IncludeAppleLibraryInBuild);
                             break;
                         case BuildTarget.WebGL:
-                            plugin.SetIncludeInBuildDelegate(
-                                    IsWebAssemblyCompatible(plugin)
-                                    ? IncludeLibraryInBuild
-                                    : (PluginImporter.IncludeInBuildDelegate)ExcludeLibraryInBuild
-                            );
+                            if (webAssemblyLibraries.Keys.Any(libGuid => libGuid == AssetDatabase.GUIDFromAssetPath(plugin.assetPath)))
+                            {
+                                plugin.SetIncludeInBuildDelegate(IncludeWebLibraryInBuild);
+                            }
                             break;
                     }
                 }
@@ -85,19 +82,21 @@ namespace Draco.Editor
             return false;
         }
 
-        static bool ExcludeLibraryInBuild(string path)
+        static bool IncludeAppleLibraryInBuild(string path)
         {
-            return false;
+            var isSimulatorLibrary = IsAppleSimulatorLibrary(path);
+            var isSimulatorBuild = IsSimulatorBuild(EditorUserBuildSettings.activeBuildTarget);
+            return isSimulatorLibrary == isSimulatorBuild;
         }
 
-        static bool IncludeLibraryInBuild(string path)
+        static bool IncludeWebLibraryInBuild(string path)
         {
-            return true;
+            return IsWebAssemblyCompatible(path);
         }
 
-        public static bool IsAppleSimulatorLibrary(PluginImporter plugin)
+        public static bool IsAppleSimulatorLibrary(string assetPath)
         {
-            var parent = new DirectoryInfo(plugin.assetPath).Parent;
+            var parent = new DirectoryInfo(assetPath).Parent;
 
             switch (parent?.Name)
             {
@@ -107,18 +106,18 @@ namespace Draco.Editor
                     return false;
                 default:
                     throw new InvalidDataException(
-                        $@"Could not determine SDK type of library ""{plugin.assetPath}"". " +
+                        $@"Could not determine SDK type of library ""{assetPath}"". " +
                         @"Apple iOS/tvOS/visionOS native libraries have to be placed in a folder named ""Device"" " +
                         @"or ""Simulator"" for implicit SDK type detection."
                     );
             }
         }
 
-        static bool IsWebAssemblyCompatible(PluginImporter plugin)
+        static bool IsWebAssemblyCompatible(string assetPath)
         {
             var unityVersion = new UnityVersion(Application.unityVersion);
 
-            var pluginGuid = AssetDatabase.GUIDFromAssetPath(plugin.assetPath);
+            var pluginGuid = AssetDatabase.GUIDFromAssetPath(assetPath);
 
             return IsWebAssemblyCompatible(pluginGuid, unityVersion);
         }
@@ -129,24 +128,19 @@ namespace Draco.Editor
             var wasm2022 = new UnityVersion("2022.2");
             var wasm2023 = new UnityVersion("2023.2.0a17");
 
-            if (pluginGuid == new GUID(wasm2020Guid))
+            if (webAssemblyLibraries.TryGetValue(pluginGuid, out var majorVersion))
             {
-                return unityVersion < wasm2021;
-            }
-
-            if (pluginGuid == new GUID(wasm2021Guid))
-            {
-                return unityVersion >= wasm2021 && unityVersion < wasm2022;
-            }
-
-            if (pluginGuid == new GUID(wasm2022Guid))
-            {
-                return unityVersion >= wasm2022 && unityVersion < wasm2023;
-            }
-
-            if (pluginGuid == new GUID(wasm2023Guid))
-            {
-                return unityVersion >= wasm2023;
+                switch (majorVersion)
+                {
+                    case 2020:
+                        return unityVersion < wasm2021;
+                    case 2021:
+                        return unityVersion >= wasm2021 && unityVersion < wasm2022;
+                    case 2022:
+                        return unityVersion >= wasm2022 && unityVersion < wasm2023;
+                    case 2023:
+                        return unityVersion >= wasm2023;
+                }
             }
 
             throw new InvalidDataException($"Unknown WebAssembly library at {AssetDatabase.GUIDToAssetPath(pluginGuid)}.");

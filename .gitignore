@@ -3,3 +3,6 @@
 
 # Rider
 **/.idea
+
+# Unity CI tooling
+/upm-ci~

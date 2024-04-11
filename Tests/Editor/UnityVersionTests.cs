@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -68,41 +69,53 @@ namespace Draco.Editor.Tests
         [Test]
         public void IsWebAssemblyCompatible2020()
         {
-            var wasm2020 = new GUID(BuildPreProcessor.wasm2020Guid);
-            Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(wasm2020, new UnityVersion("2019.1.0b3")));
-            Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(wasm2020, new UnityVersion("2021.1.50")));
-            Assert.IsFalse(BuildPreProcessor.IsWebAssemblyCompatible(wasm2020, new UnityVersion("2021.2")));
+            foreach (var lib in BuildPreProcessor.webAssemblyLibraries
+                         .Where(lib => lib.Value == 2020))
+            {
+                Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(lib.Key, new UnityVersion("2019.1.0b3")));
+                Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(lib.Key, new UnityVersion("2021.1.50")));
+                Assert.IsFalse(BuildPreProcessor.IsWebAssemblyCompatible(lib.Key, new UnityVersion("2021.2")));
+            }
         }
 
         [Test]
         public void IsWebAssemblyCompatible2021()
         {
-            var wasm2021 = new GUID(BuildPreProcessor.wasm2021Guid);
-            Assert.IsFalse(BuildPreProcessor.IsWebAssemblyCompatible(wasm2021, new UnityVersion("2021.1.99f99")));
-            Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(wasm2021, new UnityVersion("2021.2.0f1")));
-            Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(wasm2021, new UnityVersion("2022.1.99f99")));
-            Assert.IsFalse(BuildPreProcessor.IsWebAssemblyCompatible(wasm2021, new UnityVersion("2022.2")));
+            foreach (var lib in BuildPreProcessor.webAssemblyLibraries
+                         .Where(lib => lib.Value == 2021))
+            {
+                Assert.IsFalse(BuildPreProcessor.IsWebAssemblyCompatible(lib.Key, new UnityVersion("2021.1.99f99")));
+                Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(lib.Key, new UnityVersion("2021.2.0f1")));
+                Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(lib.Key, new UnityVersion("2022.1.99f99")));
+                Assert.IsFalse(BuildPreProcessor.IsWebAssemblyCompatible(lib.Key, new UnityVersion("2022.2")));
+            }
         }
 
         [Test]
         public void IsWebAssemblyCompatible2022()
         {
-            var wasm2022 = new GUID(BuildPreProcessor.wasm2022Guid);
-            Assert.IsFalse(BuildPreProcessor.IsWebAssemblyCompatible(wasm2022, new UnityVersion("2022.1.99f99")));
-            Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(wasm2022, new UnityVersion("2022.2.0f1")));
-            Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(wasm2022, new UnityVersion("2023.2.0a16")));
-            Assert.IsFalse(BuildPreProcessor.IsWebAssemblyCompatible(wasm2022, new UnityVersion("2023.2.0a17")));
+            foreach (var lib in BuildPreProcessor.webAssemblyLibraries
+                         .Where(lib => lib.Value == 2022))
+            {
+                Assert.IsFalse(BuildPreProcessor.IsWebAssemblyCompatible(lib.Key, new UnityVersion("2022.1.99f99")));
+                Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(lib.Key, new UnityVersion("2022.2.0f1")));
+                Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(lib.Key, new UnityVersion("2023.2.0a16")));
+                Assert.IsFalse(BuildPreProcessor.IsWebAssemblyCompatible(lib.Key, new UnityVersion("2023.2.0a17")));
+            }
         }
 
         [Test]
         public void IsWebAssemblyCompatible2023()
         {
-            var wasm2023 = new GUID(BuildPreProcessor.wasm2023Guid);
-            Assert.IsFalse(BuildPreProcessor.IsWebAssemblyCompatible(wasm2023, new UnityVersion("2023.2.0a16")));
-            Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(wasm2023, new UnityVersion("2023.2.0a17")));
-            Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(wasm2023, new UnityVersion("2023.3")));
-            Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(wasm2023, new UnityVersion("2024")));
-            Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(wasm2023, new UnityVersion("2025")));
+            foreach (var lib in BuildPreProcessor.webAssemblyLibraries
+                         .Where(lib => lib.Value == 2023))
+            {
+                Assert.IsFalse(BuildPreProcessor.IsWebAssemblyCompatible(lib.Key, new UnityVersion("2023.2.0a16")));
+                Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(lib.Key, new UnityVersion("2023.2.0a17")));
+                Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(lib.Key, new UnityVersion("2023.3")));
+                Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(lib.Key, new UnityVersion("2024")));
+                Assert.IsTrue(BuildPreProcessor.IsWebAssemblyCompatible(lib.Key, new UnityVersion("2025")));
+            }
         }
 
         [Test]

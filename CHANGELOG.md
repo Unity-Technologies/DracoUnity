@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added Apple Privacy Manifest file to `/Plugins` directory.
 
+### Fixed
+- Non-web libraries are properly included/excluded from builds again.
+- Apple iOS/tvOS/visionOS Device/Simulator SDK libraries are correctly included again, even when target SDK is switched during a session.
+
 ## [5.1.2] - 2024-03-25
 
 ### Fixed

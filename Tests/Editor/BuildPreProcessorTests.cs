@@ -47,7 +47,7 @@ namespace Draco.Editor.Tests
             foreach (var plugin in allPlugins)
             {
                 // Checks that it does not throw an InvalidDataException.
-                BuildPreProcessor.IsAppleSimulatorLibrary(plugin);
+                BuildPreProcessor.IsAppleSimulatorLibrary(plugin.assetPath);
             }
         }
     }

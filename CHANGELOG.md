@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] -
 
+### Added
+- Added Apple Privacy Manifest documentation.
+
 ## [5.1.3] - 2024-04-17
 
 ### Added

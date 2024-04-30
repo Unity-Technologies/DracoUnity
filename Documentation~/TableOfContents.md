@@ -6,6 +6,7 @@
 * [Prerequisites](prerequisites.md)
 * [Installation](installation.md)
 * [Get started](get-started.md)
+* [Apple Privacy Manifest](apple-privacy-manifest.md)
 * [Use case: Decoding](use-case-decoding.md)
 * [Use case: Encoding](use-case-encoding.md)
 * [Use case: Editor Import](use-case-editor-import.md)

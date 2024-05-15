@@ -33,6 +33,13 @@ namespace Draco
         /// </summary>
         public readonly BoneWeightData boneWeightData;
 
+        /// <summary>
+        /// Constructs a DecodeResult with values.
+        /// </summary>
+        /// <param name="success">Depicts if the decoding was successful.</param>
+        /// <param name="bounds">Axis aligned bounding box of the mesh/point cloud.</param>
+        /// <param name="calculateNormals">Depicts if the normals still have to be calculated.</param>
+        /// <param name="boneWeightData">Bone indices and weights.</param>
         public DecodeResult(
             bool success,
             Bounds bounds,

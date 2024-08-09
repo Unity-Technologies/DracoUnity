@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] -
 
+### Fixed
+- Error on macOS where the binary is not loaded since Apple cannot check it for malicious software. The binary has been code-signed and notarized.
+
 ## [5.1.4] - 2024-05-15
 
 ### Added

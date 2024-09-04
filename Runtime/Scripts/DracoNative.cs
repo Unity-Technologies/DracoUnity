@@ -286,7 +286,7 @@ namespace Draco
                 {
                     Assert.IsFalse(m_PositionMinMax.IsCreated, "Multiple position attributes are not supported");
                     Assert.AreEqual(3, map.numComponents, "Positions have to be 3 dimensional");
-                    m_PositionMinMax = new NativeArray<float3>(2, Allocator.TempJob);
+                    m_PositionMinMax = new NativeArray<float3>(2, m_Allocator);
                 }
 
                 if (m_StreamMemberCount[map.stream] > 1)
@@ -446,8 +446,8 @@ namespace Draco
             if (hasBoneWeightData)
             {
                 var boneCount = m_BoneIndexMap.numComponents;
-                bonesPerVertex = new NativeArray<byte>(dracoMesh->numVertices, Allocator.Persistent);
-                boneWeights = new NativeArray<BoneWeight1>(dracoMesh->numVertices * boneCount, Allocator.Persistent);
+                bonesPerVertex = new NativeArray<byte>(dracoMesh->numVertices, m_Allocator);
+                boneWeights = new NativeArray<BoneWeight1>(dracoMesh->numVertices * boneCount, m_Allocator);
             }
             Profiler.EndSample(); // SetParameters
             Profiler.EndSample(); // CreateMesh

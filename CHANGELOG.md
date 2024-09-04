@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] -
 
+### Fixed
+- Avoid exceeding allocation lifetime of 4 frames by consistently allocating NativeArrays persistent or temporary based on vertex count everywhere (fixes [#704](https://github.com/atteneder/glTFast/issues/704)).
+
 ## [5.1.5] - 2024-08-09
 
 ### Fixed
